@@ -37,10 +37,10 @@ GPLv2/v3.</p>
 <p>It is also possible to compile and install the extension without GNU Make as
 follows:</p>
 
-<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0001.so latlon-v0001.c
-cp latlon-v0001.so `pg_config --pkglibdir`
+<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0002.so latlon-v0002.c
+cp latlon-v0002.so `pg_config --pkglibdir`
 cp latlon.control `pg_config --sharedir`/extension/
-cp latlon--0.1.sql `pg_config --sharedir`/extension/
+cp latlon--0.1--0.2.sql latlon--0.2.sql `pg_config --sharedir`/extension/
 </code></pre>
 
 <h3>Loading the extension</h3>
