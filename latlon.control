@@ -1,4 +1,3 @@
-# geographical extension
 comment = 'geospatial support'
 default_version = '0.2'
 relocatable = true
