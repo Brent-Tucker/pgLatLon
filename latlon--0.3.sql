@@ -16,22 +16,22 @@ CREATE TYPE ecluster;
 CREATE FUNCTION ekey_point_in_dummy(cstring)
   RETURNS ekey_point
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_notimpl';
+  AS '$libdir/latlon-v0003', 'pgl_notimpl';
 
 CREATE FUNCTION ekey_point_out_dummy(ekey_point)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_notimpl';
+  AS '$libdir/latlon-v0003', 'pgl_notimpl';
 
 CREATE FUNCTION ekey_area_in_dummy(cstring)
   RETURNS ekey_area
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_notimpl';
+  AS '$libdir/latlon-v0003', 'pgl_notimpl';
 
 CREATE FUNCTION ekey_area_out_dummy(ekey_area)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_notimpl';
+  AS '$libdir/latlon-v0003', 'pgl_notimpl';
 
 
 --------------------------
@@ -41,22 +41,22 @@ CREATE FUNCTION ekey_area_out_dummy(ekey_area)
 CREATE FUNCTION epoint_in(cstring)
   RETURNS epoint
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_in';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_in';
 
 CREATE FUNCTION ebox_in(cstring)
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_in';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_in';
 
 CREATE FUNCTION ecircle_in(cstring)
   RETURNS ecircle
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_in';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_in';
 
 CREATE FUNCTION ecluster_in(cstring)
   RETURNS ecluster
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecluster_in';
+  AS '$libdir/latlon-v0003', 'pgl_ecluster_in';
 
 
 ---------------------------
@@ -66,22 +66,22 @@ CREATE FUNCTION ecluster_in(cstring)
 CREATE FUNCTION epoint_out(epoint)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_out';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_out';
 
 CREATE FUNCTION ebox_out(ebox)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_out';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_out';
 
 CREATE FUNCTION ecircle_out(ecircle)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_out';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_out';
 
 CREATE FUNCTION ecluster_out(ecluster)
   RETURNS cstring
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecluster_out';
+  AS '$libdir/latlon-v0003', 'pgl_ecluster_out';
 
 
 --------------------------
@@ -91,32 +91,32 @@ CREATE FUNCTION ecluster_out(ecluster)
 CREATE FUNCTION epoint_recv(internal)
   RETURNS epoint
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_recv';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_recv';
 
 CREATE FUNCTION ebox_recv(internal)
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_recv';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_recv';
 
 CREATE FUNCTION ecircle_recv(internal)
   RETURNS ecircle
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_recv';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_recv';
 
 CREATE FUNCTION epoint_send(epoint)
   RETURNS bytea
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_send';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_send';
 
 CREATE FUNCTION ebox_send(ebox)
   RETURNS bytea
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_send';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_send';
 
 CREATE FUNCTION ecircle_send(ecircle)
   RETURNS bytea
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_send';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_send';
 
 
 -----------------------------------------------
@@ -181,32 +181,32 @@ CREATE TYPE ecluster (
 CREATE FUNCTION epoint_btree_lt(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_lt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_lt';
 
 CREATE FUNCTION epoint_btree_le(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_le';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_le';
 
 CREATE FUNCTION epoint_btree_eq(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_eq';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_eq';
 
 CREATE FUNCTION epoint_btree_ne(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_ne';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_ne';
 
 CREATE FUNCTION epoint_btree_ge(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_ge';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_ge';
 
 CREATE FUNCTION epoint_btree_gt(epoint, epoint)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_gt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_gt';
 
 CREATE OPERATOR <<< (
   leftarg = epoint,
@@ -272,7 +272,7 @@ CREATE OPERATOR >>> (
 CREATE FUNCTION epoint_btree_cmp(epoint, epoint)
   RETURNS int4
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_epoint_cmp';
+  AS '$libdir/latlon-v0003', 'pgl_btree_epoint_cmp';
 
 CREATE OPERATOR CLASS epoint_btree_ops
   DEFAULT FOR TYPE epoint USING btree AS
@@ -290,32 +290,32 @@ CREATE OPERATOR CLASS epoint_btree_ops
 CREATE FUNCTION ebox_btree_lt(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_lt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_lt';
 
 CREATE FUNCTION ebox_btree_le(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_le';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_le';
 
 CREATE FUNCTION ebox_btree_eq(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_eq';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_eq';
 
 CREATE FUNCTION ebox_btree_ne(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_ne';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_ne';
 
 CREATE FUNCTION ebox_btree_ge(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_ge';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_ge';
 
 CREATE FUNCTION ebox_btree_gt(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_gt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_gt';
 
 CREATE OPERATOR <<< (
   leftarg = ebox,
@@ -381,7 +381,7 @@ CREATE OPERATOR >>> (
 CREATE FUNCTION ebox_btree_cmp(ebox, ebox)
   RETURNS int4
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ebox_cmp';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ebox_cmp';
 
 CREATE OPERATOR CLASS ebox_btree_ops
   DEFAULT FOR TYPE ebox USING btree AS
@@ -399,32 +399,32 @@ CREATE OPERATOR CLASS ebox_btree_ops
 CREATE FUNCTION ecircle_btree_lt(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_lt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_lt';
 
 CREATE FUNCTION ecircle_btree_le(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_le';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_le';
 
 CREATE FUNCTION ecircle_btree_eq(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_eq';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_eq';
 
 CREATE FUNCTION ecircle_btree_ne(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_ne';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_ne';
 
 CREATE FUNCTION ecircle_btree_ge(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_ge';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_ge';
 
 CREATE FUNCTION ecircle_btree_gt(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_gt';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_gt';
 
 CREATE OPERATOR <<< (
   leftarg = ecircle,
@@ -490,7 +490,7 @@ CREATE OPERATOR >>> (
 CREATE FUNCTION ecircle_btree_cmp(ecircle, ecircle)
   RETURNS int4
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_btree_ecircle_cmp';
+  AS '$libdir/latlon-v0003', 'pgl_btree_ecircle_cmp';
 
 CREATE OPERATOR CLASS ecircle_btree_ops
   DEFAULT FOR TYPE ecircle USING btree AS
@@ -511,28 +511,28 @@ CREATE OPERATOR CLASS ecircle_btree_ops
 CREATE FUNCTION cast_epoint_to_ebox(epoint)
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_to_ebox';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_to_ebox';
 
 CREATE CAST (epoint AS ebox) WITH FUNCTION cast_epoint_to_ebox(epoint);
 
 CREATE FUNCTION cast_epoint_to_ecircle(epoint)
   RETURNS ecircle
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_to_ecircle';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_to_ecircle';
 
 CREATE CAST (epoint AS ecircle) WITH FUNCTION cast_epoint_to_ecircle(epoint);
 
 CREATE FUNCTION cast_epoint_to_ecluster(epoint)
   RETURNS ecluster
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_to_ecluster';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_to_ecluster';
 
 CREATE CAST (epoint AS ecluster) WITH FUNCTION cast_epoint_to_ecluster(epoint);
 
 CREATE FUNCTION cast_ebox_to_ecluster(ebox)
   RETURNS ecluster
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_to_ecluster';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_to_ecluster';
 
 CREATE CAST (ebox AS ecluster) WITH FUNCTION cast_ebox_to_ecluster(ebox);
 
@@ -544,7 +544,7 @@ CREATE CAST (ebox AS ecluster) WITH FUNCTION cast_ebox_to_ecluster(ebox);
 CREATE FUNCTION epoint(float8, float8)
   RETURNS epoint
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_epoint';
+  AS '$libdir/latlon-v0003', 'pgl_create_epoint';
 
 CREATE FUNCTION epoint_latlon(float8, float8)
   RETURNS epoint
@@ -561,27 +561,27 @@ CREATE FUNCTION epoint_lonlat(float8, float8)
 CREATE FUNCTION empty_ebox()
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_empty_ebox';
+  AS '$libdir/latlon-v0003', 'pgl_create_empty_ebox';
 
 CREATE FUNCTION ebox(float8, float8, float8, float8)
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_ebox';
+  AS '$libdir/latlon-v0003', 'pgl_create_ebox';
 
 CREATE FUNCTION ebox(epoint, epoint)
   RETURNS ebox
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_ebox_from_epoints';
+  AS '$libdir/latlon-v0003', 'pgl_create_ebox_from_epoints';
 
 CREATE FUNCTION ecircle(float8, float8, float8)
   RETURNS ecircle
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_ecircle';
+  AS '$libdir/latlon-v0003', 'pgl_create_ecircle';
 
 CREATE FUNCTION ecircle(epoint, float8)
   RETURNS ecircle
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_create_ecircle_from_epoint';
+  AS '$libdir/latlon-v0003', 'pgl_create_ecircle_from_epoint';
 
 CREATE FUNCTION ecluster_concat(ecluster[])
   RETURNS ecluster
@@ -638,42 +638,42 @@ CREATE FUNCTION ecluster_create_polygon(epoint[])
 CREATE FUNCTION latitude(epoint)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_lat';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_lat';
 
 CREATE FUNCTION longitude(epoint)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_lon';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_lon';
 
 CREATE FUNCTION min_latitude(ebox)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_lat_min';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_lat_min';
 
 CREATE FUNCTION max_latitude(ebox)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_lat_max';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_lat_max';
 
 CREATE FUNCTION min_longitude(ebox)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_lon_min';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_lon_min';
 
 CREATE FUNCTION max_longitude(ebox)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_lon_max';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_lon_max';
 
 CREATE FUNCTION center(ecircle)
   RETURNS epoint
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_center';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_center';
 
 CREATE FUNCTION radius(ecircle)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_radius';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_radius';
 
 CREATE FUNCTION ecluster_extract_points(ecluster)
   RETURNS SETOF epoint
@@ -720,57 +720,57 @@ CREATE FUNCTION ecluster_extract_polygons(ecluster)
 CREATE FUNCTION epoint_ebox_overlap_proc(epoint, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_ebox_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ebox_overlap';
 
 CREATE FUNCTION epoint_ecircle_overlap_proc(epoint, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_ecircle_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ecircle_overlap';
 
 CREATE FUNCTION epoint_ecluster_overlap_proc(epoint, ecluster)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_ecluster_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ecluster_overlap';
 
 CREATE FUNCTION ebox_overlap_proc(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ebox_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_ebox_overlap';
 
 CREATE FUNCTION ecircle_overlap_proc(ecircle, ecircle)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_overlap';
 
 CREATE FUNCTION ecircle_ecluster_overlap_proc(ecircle, ecluster)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_ecluster_overlap';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_ecluster_overlap';
 
 CREATE FUNCTION epoint_distance_proc(epoint, epoint)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_distance';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_distance';
 
 CREATE FUNCTION epoint_ecircle_distance_proc(epoint, ecircle)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_ecircle_distance';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ecircle_distance';
 
 CREATE FUNCTION epoint_ecluster_distance_proc(epoint, ecluster)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_epoint_ecluster_distance';
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ecluster_distance';
 
 CREATE FUNCTION ecircle_distance_proc(ecircle, ecircle)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_distance';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_distance';
 
 CREATE FUNCTION ecircle_ecluster_distance_proc(ecircle, ecluster)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
-  AS '$libdir/latlon-v0002', 'pgl_ecircle_ecluster_distance';
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_ecluster_distance';
 
 CREATE OPERATOR && (
   leftarg = epoint,
@@ -954,52 +954,52 @@ CREATE OPERATOR <-> (
 CREATE FUNCTION pgl_gist_consistent(internal, internal, smallint, oid, internal)
   RETURNS boolean
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_consistent';
+  AS '$libdir/latlon-v0003', 'pgl_gist_consistent';
 
 CREATE FUNCTION pgl_gist_union(internal, internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_union';
+  AS '$libdir/latlon-v0003', 'pgl_gist_union';
 
 CREATE FUNCTION pgl_gist_compress_epoint(internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_compress_epoint';
+  AS '$libdir/latlon-v0003', 'pgl_gist_compress_epoint';
 
 CREATE FUNCTION pgl_gist_compress_ecircle(internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_compress_ecircle';
+  AS '$libdir/latlon-v0003', 'pgl_gist_compress_ecircle';
 
 CREATE FUNCTION pgl_gist_compress_ecluster(internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_compress_ecluster';
+  AS '$libdir/latlon-v0003', 'pgl_gist_compress_ecluster';
 
 CREATE FUNCTION pgl_gist_decompress(internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_decompress';
+  AS '$libdir/latlon-v0003', 'pgl_gist_decompress';
 
 CREATE FUNCTION pgl_gist_penalty(internal, internal, internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_penalty';
+  AS '$libdir/latlon-v0003', 'pgl_gist_penalty';
 
 CREATE FUNCTION pgl_gist_picksplit(internal, internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_picksplit';
+  AS '$libdir/latlon-v0003', 'pgl_gist_picksplit';
 
 CREATE FUNCTION pgl_gist_same(internal, internal, internal)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_same';
+  AS '$libdir/latlon-v0003', 'pgl_gist_same';
 
 CREATE FUNCTION pgl_gist_distance(internal, internal, smallint, oid)
   RETURNS internal
   LANGUAGE C STRICT
-  AS '$libdir/latlon-v0002', 'pgl_gist_distance';
+  AS '$libdir/latlon-v0003', 'pgl_gist_distance';
 
 CREATE OPERATOR CLASS epoint_ops
   DEFAULT FOR TYPE epoint USING gist AS
