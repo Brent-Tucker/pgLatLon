@@ -1,16 +1,19 @@
-<html><head><title>pgLatLon v0.1 documentation</title></head><body>
-<h1>pgLatLon v0.1 documentation</h1>
+<html><head><title>pgLatLon v0.3 documentation</title></head><body>
+<h1>pgLatLon v0.3 documentation</h1>
 
 <p>pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
 for the WGS-84 spheroid.</p>
 
 <p>While many other spatial databases still use imprecise bounding boxes for many
-operations, pgLatLon supports more precise geometric calculations for all
-implemented operators. Efficient indexing of geometric objects is provided
+operations, pgLatLon aims to support more precise geometric calculations for
+all implemented operators. Efficient indexing of geometric objects is provided
 using space-filling fractal curves. Optimizations on bit level (including
 logarithmic compression) allow for a highly memory-efficient non-overlapping
 index suitable for huge datasets.</p>
+
+<p>pgLatLon is a lightweight solution as it only depends on PostgreSQL itself (and
+a C compiler for building).</p>
 
 <p>Unlike competing spatial extensions for PostgreSQL, pgLatLon is available under
 the permissive MIT/X11 license to avoid problems with viral licenses like the
@@ -248,6 +251,26 @@ implemented for:</p>
 
 <p>The <code>&amp;&amp;</code> operator is commutative, i.e. <code>a &amp;&amp; b</code> is the same as <code>b &amp;&amp; a</code>. Each
 commutation is supported as well.</p>
+
+<h4>Lossy overlap operator <code>&amp;&amp;+</code></h4>
+
+<p>Tests if two geographic objects may have at least one point in common. Opposed
+to the <code>&amp;&amp;</code> operator, the <code>&amp;&amp;+</code> operator may return false positives and is
+currently implemented for:</p>
+
+<ul>
+<li><code>epoint &amp;&amp;+ ecluster</code></li>
+<li><code>ebox &amp;&amp;+ ecircle</code></li>
+<li><code>ebox &amp;&amp;+ ecluster</code></li>
+<li><code>ecircle &amp;&amp;+ ecluster</code></li>
+<li><code>ecluster &amp;&amp;+ ecluster</code></li>
+</ul>
+
+<p>The <code>&amp;&amp;+</code> operator is commutative, i.e. <code>a &amp;&amp;+ b</code> is the same as <code>b &amp;&amp;+ a</code>. Each
+commutation is supported as well.</p>
+
+<p>Where two data types support both the <code>&amp;&amp;</code> and the <code>&amp;&amp;+</code> operator, the <code>&amp;&amp;+</code>
+operator computes faster.</p>
 
 <h4>Distance operator <code>&lt;-&gt;</code></h4>
 
