@@ -2107,12 +2107,48 @@ Datum pgl_epoint_ecluster_overlap(PG_FUNCTION_ARGS) {
   PG_RETURN_BOOL(retval);
 }
 
+/* check if point may be inside cluster (lossy overl. operator "&&+") in SQL */
+PG_FUNCTION_INFO_V1(pgl_epoint_ecluster_may_overlap);
+Datum pgl_epoint_ecluster_may_overlap(PG_FUNCTION_ARGS) {
+  pgl_point *point = (pgl_point *)PG_GETARG_POINTER(0);
+  pgl_cluster *cluster = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval = pgl_distance(
+    point->lat, point->lon,
+    cluster->bounding.center.lat, cluster->bounding.center.lon
+  ) <= cluster->bounding.radius;
+  PG_FREE_IF_COPY(cluster, 1);
+  PG_RETURN_BOOL(retval);
+}
+
 /* check if two boxes overlap (overlap operator "&&") in SQL */
 PG_FUNCTION_INFO_V1(pgl_ebox_overlap);
 Datum pgl_ebox_overlap(PG_FUNCTION_ARGS) {
   pgl_box *box1 = (pgl_box *)PG_GETARG_POINTER(0);
   pgl_box *box2 = (pgl_box *)PG_GETARG_POINTER(1);
   PG_RETURN_BOOL(pgl_boxes_overlap(box1, box2));
+}
+
+/* check if box and circle may overlap (lossy overl. operator "&&+") in SQL */
+PG_FUNCTION_INFO_V1(pgl_ebox_ecircle_may_overlap);
+Datum pgl_ebox_ecircle_may_overlap(PG_FUNCTION_ARGS) {
+  pgl_box *box = (pgl_box *)PG_GETARG_POINTER(0);
+  pgl_circle *circle = (pgl_circle *)PG_GETARG_POINTER(1);
+  PG_RETURN_BOOL(
+    pgl_estimate_point_box_distance(&circle->center, box) <= circle->radius
+  );
+}
+
+/* check if box and cluster may overlap (lossy overl. operator "&&+") in SQL */
+PG_FUNCTION_INFO_V1(pgl_ebox_ecluster_may_overlap);
+Datum pgl_ebox_ecluster_may_overlap(PG_FUNCTION_ARGS) {
+  pgl_box *box = (pgl_box *)PG_GETARG_POINTER(0);
+  pgl_cluster *cluster = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval = pgl_estimate_point_box_distance(
+    &cluster->bounding.center,
+    box
+  ) <= cluster->bounding.radius;
+  PG_FREE_IF_COPY(cluster, 1);
+  PG_RETURN_BOOL(retval);
 }
 
 /* check if two circles overlap (overlap operator "&&") in SQL */
@@ -2137,6 +2173,33 @@ Datum pgl_ecircle_ecluster_overlap(PG_FUNCTION_ARGS) {
     pgl_point_cluster_distance(&(circle->center), cluster) <= circle->radius
   );
   PG_FREE_IF_COPY(cluster, 1);
+  PG_RETURN_BOOL(retval);
+}
+
+/* check if circle and cluster may be overlap (l. ov. operator "&&+") in SQL */
+PG_FUNCTION_INFO_V1(pgl_ecircle_ecluster_may_overlap);
+Datum pgl_ecircle_ecluster_may_overlap(PG_FUNCTION_ARGS) {
+  pgl_circle *circle = (pgl_circle *)PG_GETARG_POINTER(0);
+  pgl_cluster *cluster = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval = pgl_distance(
+    circle->center.lat, circle->center.lon,
+    cluster->bounding.center.lat, cluster->bounding.center.lon
+  ) <= circle->radius + cluster->bounding.radius;
+  PG_FREE_IF_COPY(cluster, 1);
+  PG_RETURN_BOOL(retval);
+}
+
+/* check if two clusters may overlap (lossy overlap operator "&&+") in SQL */
+PG_FUNCTION_INFO_V1(pgl_ecluster_may_overlap);
+Datum pgl_ecluster_may_overlap(PG_FUNCTION_ARGS) {
+  pgl_cluster *cluster1 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  pgl_cluster *cluster2 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval = pgl_distance(
+    cluster1->bounding.center.lat, cluster1->bounding.center.lon,
+    cluster2->bounding.center.lat, cluster2->bounding.center.lon
+  ) <= cluster1->bounding.radius + cluster2->bounding.radius;
+  PG_FREE_IF_COPY(cluster1, 0);
+  PG_FREE_IF_COPY(cluster2, 1);
   PG_RETURN_BOOL(retval);
 }
 
@@ -2285,6 +2348,8 @@ Datum pgl_gist_consistent(PG_FUNCTION_ARGS) {
   bool *recheck = (bool *)PG_GETARG_POINTER(4);
   /* demand recheck because index and query methods are lossy */
   *recheck = true;
+  /* strategy number aliases for different operators using the same strategy */
+  strategy %= 100;
   /* strategy number 11: equality of two points */
   if (strategy == 11) {
     /* query datum is another point */
@@ -2653,6 +2718,8 @@ Datum pgl_gist_distance(PG_FUNCTION_ARGS) {
   /* demand recheck because distance is just an estimation */
   /* (real distance may be bigger) */
   *recheck = true;
+  /* strategy number aliases for different operators using the same strategy */
+  strategy %= 100;
   /* strategy number 31: distance to point */
   if (strategy == 31) {
     /* query datum is a point */

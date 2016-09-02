@@ -732,10 +732,25 @@ CREATE FUNCTION epoint_ecluster_overlap_proc(epoint, ecluster)
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0003', 'pgl_epoint_ecluster_overlap';
 
+CREATE FUNCTION epoint_ecluster_may_overlap_proc(epoint, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0003', 'pgl_epoint_ecluster_may_overlap';
+
 CREATE FUNCTION ebox_overlap_proc(ebox, ebox)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0003', 'pgl_ebox_overlap';
+
+CREATE FUNCTION ebox_ecircle_may_overlap_proc(ebox, ecircle)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0003', 'pgl_ebox_ecircle_may_overlap';
+
+CREATE FUNCTION ebox_ecluster_may_overlap_proc(ebox, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0003', 'pgl_ebox_ecluster_may_overlap';
 
 CREATE FUNCTION ecircle_overlap_proc(ecircle, ecircle)
   RETURNS boolean
@@ -746,6 +761,16 @@ CREATE FUNCTION ecircle_ecluster_overlap_proc(ecircle, ecluster)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0003', 'pgl_ecircle_ecluster_overlap';
+
+CREATE FUNCTION ecircle_ecluster_may_overlap_proc(ecircle, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0003', 'pgl_ecircle_ecluster_may_overlap';
+
+CREATE FUNCTION ecluster_may_overlap_proc(ecluster, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0003', 'pgl_ecluster_may_overlap';
 
 CREATE FUNCTION epoint_distance_proc(epoint, epoint)
   RETURNS float8
@@ -878,6 +903,103 @@ CREATE OPERATOR && (
   join = areajoinsel
 );
 
+CREATE OPERATOR &&+ (
+  leftarg = epoint,
+  rightarg = ecluster,
+  procedure = epoint_ecluster_may_overlap_proc,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION epoint_ecluster_may_overlap_commutator(ecluster, epoint)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 &&+ $1';
+
+CREATE OPERATOR &&+ (
+  leftarg = ecluster,
+  rightarg = epoint,
+  procedure = epoint_ecluster_may_overlap_commutator,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR &&+ (
+  leftarg = ebox,
+  rightarg = ecircle,
+  procedure = ebox_ecircle_may_overlap_proc,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecircle_may_overlap_commutator(ecircle, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 &&+ $1';
+
+CREATE OPERATOR &&+ (
+  leftarg = ecircle,
+  rightarg = ebox,
+  procedure = ebox_ecircle_may_overlap_commutator,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR &&+ (
+  leftarg = ebox,
+  rightarg = ecluster,
+  procedure = ebox_ecluster_may_overlap_proc,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecluster_may_overlap_commutator(ecluster, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 &&+ $1';
+
+CREATE OPERATOR &&+ (
+  leftarg = ecluster,
+  rightarg = ebox,
+  procedure = ebox_ecluster_may_overlap_commutator,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR &&+ (
+  leftarg = ecircle,
+  rightarg = ecluster,
+  procedure = ecircle_ecluster_may_overlap_proc,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ecircle_ecluster_may_overlap_commutator(ecluster, ecircle)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 &&+ $1';
+
+CREATE OPERATOR &&+ (
+  leftarg = ecluster,
+  rightarg = ecircle,
+  procedure = ecircle_ecluster_may_overlap_commutator,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR &&+ (
+  leftarg = ecluster,
+  rightarg = ecluster,
+  procedure = ecluster_may_overlap_proc,
+  commutator = &&+,
+  restrict = areasel,
+  join = areajoinsel
+);
+
 CREATE OPERATOR <-> (
   leftarg = epoint,
   rightarg = epoint,
@@ -1003,13 +1125,14 @@ CREATE FUNCTION pgl_gist_distance(internal, internal, smallint, oid)
 
 CREATE OPERATOR CLASS epoint_ops
   DEFAULT FOR TYPE epoint USING gist AS
-  OPERATOR 11 = ,
-  OPERATOR 22 && (epoint, ebox),
-  OPERATOR 23 && (epoint, ecircle),
-  OPERATOR 24 && (epoint, ecluster),
-  OPERATOR 31 <-> (epoint, epoint) FOR ORDER BY float_ops,
-  OPERATOR 33 <-> (epoint, ecircle) FOR ORDER BY float_ops,
-  OPERATOR 34 <-> (epoint, ecluster) FOR ORDER BY float_ops,
+  OPERATOR  11 = ,
+  OPERATOR  22 &&  (epoint, ebox),
+  OPERATOR  23 &&  (epoint, ecircle),
+  OPERATOR  24 &&  (epoint, ecluster),
+  OPERATOR 124 &&+ (epoint, ecluster),
+  OPERATOR  31 <-> (epoint, epoint) FOR ORDER BY float_ops,
+  OPERATOR  33 <-> (epoint, ecircle) FOR ORDER BY float_ops,
+  OPERATOR  34 <-> (epoint, ecluster) FOR ORDER BY float_ops,
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
   FUNCTION 2 pgl_gist_union(internal, internal),
   FUNCTION 3 pgl_gist_compress_epoint(internal),
@@ -1022,13 +1145,15 @@ CREATE OPERATOR CLASS epoint_ops
 
 CREATE OPERATOR CLASS ecircle_ops
   DEFAULT FOR TYPE ecircle USING gist AS
-  OPERATOR 13 = ,
-  OPERATOR 21 && (ecircle, epoint),
-  OPERATOR 23 && (ecircle, ecircle),
-  OPERATOR 24 && (ecircle, ecluster),
-  OPERATOR 31 <-> (ecircle, epoint) FOR ORDER BY float_ops,
-  OPERATOR 33 <-> (ecircle, ecircle) FOR ORDER BY float_ops,
-  OPERATOR 34 <-> (ecircle, ecluster) FOR ORDER BY float_ops,
+  OPERATOR  13 = ,
+  OPERATOR  21 &&  (ecircle, epoint),
+  OPERATOR 122 &&+ (ecircle, ebox),
+  OPERATOR  23 &&  (ecircle, ecircle),
+  OPERATOR  24 &&  (ecircle, ecluster),
+  OPERATOR 124 &&+ (ecircle, ecluster),
+  OPERATOR  31 <-> (ecircle, epoint) FOR ORDER BY float_ops,
+  OPERATOR  33 <-> (ecircle, ecircle) FOR ORDER BY float_ops,
+  OPERATOR  34 <-> (ecircle, ecluster) FOR ORDER BY float_ops,
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
   FUNCTION 2 pgl_gist_union(internal, internal),
   FUNCTION 3 pgl_gist_compress_ecircle(internal),
@@ -1041,7 +1166,12 @@ CREATE OPERATOR CLASS ecircle_ops
 
 CREATE OPERATOR CLASS ecluster_ops
   DEFAULT FOR TYPE ecluster USING gist AS
-  OPERATOR 21 && (ecluster, epoint),
+  OPERATOR  21 &&  (ecluster, epoint),
+  OPERATOR 121 &&+ (ecluster, epoint),
+  OPERATOR 122 &&+ (ecluster, ebox),
+  OPERATOR  23 &&  (ecluster, ecircle),
+  OPERATOR 123 &&+ (ecluster, ecircle),
+  OPERATOR 124 &&+ (ecluster, ecluster),
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
   FUNCTION 2 pgl_gist_union(internal, internal),
   FUNCTION 3 pgl_gist_compress_ecluster(internal),

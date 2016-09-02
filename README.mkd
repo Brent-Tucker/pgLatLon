@@ -1,4 +1,4 @@
-pgLatLon v0.1 documentation
+pgLatLon v0.3 documentation
 ===========================
 
 pgLatLon is a spatial database extension for the PostgreSQL object-relational
@@ -6,11 +6,14 @@ database management system providing geographic data types and spatial indexing
 for the WGS-84 spheroid.
 
 While many other spatial databases still use imprecise bounding boxes for many
-operations, pgLatLon supports more precise geometric calculations for all
-implemented operators. Efficient indexing of geometric objects is provided
+operations, pgLatLon aims to support more precise geometric calculations for
+all implemented operators. Efficient indexing of geometric objects is provided
 using space-filling fractal curves. Optimizations on bit level (including
 logarithmic compression) allow for a highly memory-efficient non-overlapping
 index suitable for huge datasets.
+
+pgLatLon is a lightweight solution as it only depends on PostgreSQL itself (and
+a C compiler for building).
 
 Unlike competing spatial extensions for PostgreSQL, pgLatLon is available under
 the permissive MIT/X11 license to avoid problems with viral licenses like the
@@ -238,6 +241,24 @@ implemented for:
 
 The `&&` operator is commutative, i.e. `a && b` is the same as `b && a`. Each
 commutation is supported as well.
+
+#### Lossy overlap operator `&&+`
+
+Tests if two geographic objects may have at least one point in common. Opposed
+to the `&&` operator, the `&&+` operator may return false positives and is
+currently implemented for:
+
+* `epoint &&+ ecluster`
+* `ebox &&+ ecircle`
+* `ebox &&+ ecluster`
+* `ecircle &&+ ecluster`
+* `ecluster &&+ ecluster`
+
+The `&&+` operator is commutative, i.e. `a &&+ b` is the same as `b &&+ a`. Each
+commutation is supported as well.
+
+Where two data types support both the `&&` and the `&&+` operator, the `&&+`
+operator computes faster.
 
 #### Distance operator `<->`
 
