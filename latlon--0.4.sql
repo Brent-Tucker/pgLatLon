@@ -767,10 +767,20 @@ CREATE FUNCTION ecircle_ecluster_may_overlap_proc(ecircle, ecluster)
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0004', 'pgl_ecircle_ecluster_may_overlap';
 
+CREATE FUNCTION ecluster_overlap_proc(ecluster, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0004', 'pgl_ecluster_overlap';
+
 CREATE FUNCTION ecluster_may_overlap_proc(ecluster, ecluster)
   RETURNS boolean
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0004', 'pgl_ecluster_may_overlap';
+
+CREATE FUNCTION ecluster_contains_proc(ecluster, ecluster)
+  RETURNS boolean
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0004', 'pgl_ecluster_contains';
 
 CREATE FUNCTION epoint_distance_proc(epoint, epoint)
   RETURNS float8
@@ -796,6 +806,11 @@ CREATE FUNCTION ecircle_ecluster_distance_proc(ecircle, ecluster)
   RETURNS float8
   LANGUAGE C IMMUTABLE STRICT
   AS '$libdir/latlon-v0004', 'pgl_ecircle_ecluster_distance';
+
+CREATE FUNCTION ecluster_distance_proc(ecluster, ecluster)
+  RETURNS float8
+  LANGUAGE C IMMUTABLE STRICT
+  AS '$libdir/latlon-v0004', 'pgl_ecluster_distance';
 
 CREATE OPERATOR && (
   leftarg = epoint,
@@ -903,6 +918,67 @@ CREATE OPERATOR && (
   join = areajoinsel
 );
 
+CREATE OPERATOR && (
+  leftarg = ecluster,
+  rightarg = ecluster,
+  procedure = ecluster_overlap_proc,
+  commutator = &&,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecircle_overlap_castwrap(ebox, ecircle)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster && $2';
+
+CREATE OPERATOR && (
+  leftarg = ebox,
+  rightarg = ecircle,
+  procedure = ebox_ecircle_overlap_castwrap,
+  commutator = &&,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecircle_overlap_castwrap(ecircle, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 && $2::ecluster';
+
+CREATE OPERATOR && (
+  leftarg = ecircle,
+  rightarg = ebox,
+  procedure = ebox_ecircle_overlap_castwrap,
+  commutator = &&,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecluster_overlap_castwrap(ebox, ecluster)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster && $2';
+
+CREATE OPERATOR && (
+  leftarg = ebox,
+  rightarg = ecluster,
+  procedure = ebox_ecluster_overlap_castwrap,
+  commutator = &&,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecluster_overlap_castwrap(ecluster, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 && $2::ecluster';
+
+CREATE OPERATOR && (
+  leftarg = ecluster,
+  rightarg = ebox,
+  procedure = ebox_ecluster_overlap_castwrap,
+  commutator = &&,
+  restrict = areasel,
+  join = areajoinsel
+);
+
 CREATE OPERATOR &&+ (
   leftarg = epoint,
   rightarg = ecluster,
@@ -1000,6 +1076,116 @@ CREATE OPERATOR &&+ (
   join = areajoinsel
 );
 
+CREATE OPERATOR @> (
+  leftarg = ebox,
+  rightarg = epoint,
+  procedure = epoint_ebox_overlap_commutator,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR <@ (
+  leftarg = epoint,
+  rightarg = ebox,
+  procedure = epoint_ebox_overlap_proc,
+  commutator = @>,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR @> (
+  leftarg = ecluster,
+  rightarg = epoint,
+  procedure = epoint_ecluster_overlap_commutator,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR <@ (
+  leftarg = epoint,
+  rightarg = ecluster,
+  procedure = epoint_ecluster_overlap_proc,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE OPERATOR @> (
+  leftarg = ecluster,
+  rightarg = ecluster,
+  procedure = ecluster_contains_proc,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ecluster_contains_commutator(ecluster, ecluster)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 @> $1';
+
+CREATE OPERATOR <@ (
+  leftarg = ecluster,
+  rightarg = ecluster,
+  procedure = ecluster_contains_commutator,
+  commutator = @>,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecluster_contains_castwrap(ebox, ecluster)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster @> $2';
+
+CREATE OPERATOR @> (
+  leftarg = ebox,
+  rightarg = ecluster,
+  procedure = ebox_ecluster_contains_castwrap,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_ecluster_contains_castwrap(ecluster, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2::ecluster @> $1';
+
+CREATE OPERATOR <@ (
+  leftarg = ecluster,
+  rightarg = ebox,
+  procedure = ebox_ecluster_contains_castwrap,
+  commutator = @>,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ecluster_ebox_contains_castwrap(ecluster, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 @> $2::ecluster';
+
+CREATE OPERATOR @> (
+  leftarg = ecluster,
+  rightarg = ebox,
+  procedure = ecluster_ebox_contains_castwrap,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ecluster_ebox_contains_castwrap(ebox, ecluster)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2 @> $1::ecluster';
+
+CREATE OPERATOR <@ (
+  leftarg = ebox,
+  rightarg = ecluster,
+  procedure = ecluster_ebox_contains_castwrap,
+  commutator = @>,
+  restrict = areasel,
+  join = areajoinsel
+);
+
 CREATE OPERATOR <-> (
   leftarg = epoint,
   rightarg = epoint,
@@ -1068,6 +1254,90 @@ CREATE OPERATOR <-> (
   commutator = <->
 );
 
+CREATE OPERATOR <-> (
+  leftarg = ecluster,
+  rightarg = ecluster,
+  procedure = ecluster_distance_proc,
+  commutator = <->
+);
+
+CREATE FUNCTION epoint_ebox_distance_castwrap(epoint, ebox)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 <-> $2::ecluster';
+
+CREATE OPERATOR <-> (
+  leftarg = epoint,
+  rightarg = ebox,
+  procedure = epoint_ebox_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION epoint_ebox_distance_castwrap(ebox, epoint)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster <-> $2';
+
+CREATE OPERATOR <-> (
+  leftarg = ebox,
+  rightarg = epoint,
+  procedure = epoint_ebox_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION ebox_distance_castwrap(ebox, ebox)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster <-> $2::ecluster';
+
+CREATE OPERATOR <-> (
+  leftarg = ebox,
+  rightarg = ebox,
+  procedure = ebox_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION ebox_ecircle_distance_castwrap(ebox, ecircle)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster <-> $2';
+
+CREATE OPERATOR <-> (
+  leftarg = ebox,
+  rightarg = ecircle,
+  procedure = ebox_ecircle_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION ebox_ecircle_distance_castwrap(ecircle, ebox)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 <-> $2::ecluster';
+
+CREATE OPERATOR <-> (
+  leftarg = ecircle,
+  rightarg = ebox,
+  procedure = ebox_ecircle_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION ebox_ecluster_distance_castwrap(ebox, ecluster)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster <-> $2';
+
+CREATE OPERATOR <-> (
+  leftarg = ebox,
+  rightarg = ecluster,
+  procedure = ebox_ecluster_distance_castwrap,
+  commutator = <->
+);
+
+CREATE FUNCTION ebox_ecluster_distance_castwrap(ecluster, ebox)
+  RETURNS float8
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1 <-> $2::ecluster';
+
+CREATE OPERATOR <-> (
+  leftarg = ecluster,
+  rightarg = ebox,
+  procedure = ebox_ecluster_distance_castwrap,
+  commutator = <->
+);
+
 
 ----------------
 -- GiST index --
@@ -1127,10 +1397,13 @@ CREATE OPERATOR CLASS epoint_ops
   DEFAULT FOR TYPE epoint USING gist AS
   OPERATOR  11 = ,
   OPERATOR  22 &&  (epoint, ebox),
+  OPERATOR 222 <@  (epoint, ebox),
   OPERATOR  23 &&  (epoint, ecircle),
   OPERATOR  24 &&  (epoint, ecluster),
   OPERATOR 124 &&+ (epoint, ecluster),
+  OPERATOR 224 <@  (epoint, ecluster),
   OPERATOR  31 <-> (epoint, epoint) FOR ORDER BY float_ops,
+  OPERATOR  32 <-> (epoint, ebox) FOR ORDER BY float_ops,
   OPERATOR  33 <-> (epoint, ecircle) FOR ORDER BY float_ops,
   OPERATOR  34 <-> (epoint, ecluster) FOR ORDER BY float_ops,
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
@@ -1147,11 +1420,13 @@ CREATE OPERATOR CLASS ecircle_ops
   DEFAULT FOR TYPE ecircle USING gist AS
   OPERATOR  13 = ,
   OPERATOR  21 &&  (ecircle, epoint),
+  OPERATOR  22 &&  (ecircle, ebox),
   OPERATOR 122 &&+ (ecircle, ebox),
   OPERATOR  23 &&  (ecircle, ecircle),
   OPERATOR  24 &&  (ecircle, ecluster),
   OPERATOR 124 &&+ (ecircle, ecluster),
   OPERATOR  31 <-> (ecircle, epoint) FOR ORDER BY float_ops,
+  OPERATOR  32 <-> (ecircle, ebox) FOR ORDER BY float_ops,
   OPERATOR  33 <-> (ecircle, ecircle) FOR ORDER BY float_ops,
   OPERATOR  34 <-> (ecircle, ecluster) FOR ORDER BY float_ops,
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
@@ -1168,10 +1443,21 @@ CREATE OPERATOR CLASS ecluster_ops
   DEFAULT FOR TYPE ecluster USING gist AS
   OPERATOR  21 &&  (ecluster, epoint),
   OPERATOR 121 &&+ (ecluster, epoint),
+  OPERATOR 221 @>  (ecluster, epoint),
+  OPERATOR  22 &&  (ecluster, ebox),
   OPERATOR 122 &&+ (ecluster, ebox),
+  OPERATOR 222 @>  (ecluster, ebox),
+  OPERATOR 322 <@  (ecluster, ebox),
   OPERATOR  23 &&  (ecluster, ecircle),
   OPERATOR 123 &&+ (ecluster, ecircle),
+  OPERATOR  24 &&  (ecluster, ecluster),
   OPERATOR 124 &&+ (ecluster, ecluster),
+  OPERATOR 224 @>  (ecluster, ecluster),
+  OPERATOR 324 <@  (ecluster, ecluster),
+  OPERATOR  31 <-> (ecluster, epoint) FOR ORDER BY float_ops,
+  OPERATOR  32 <-> (ecluster, ebox) FOR ORDER BY float_ops,
+  OPERATOR  33 <-> (ecluster, ecircle) FOR ORDER BY float_ops,
+  OPERATOR  34 <-> (ecluster, ecluster) FOR ORDER BY float_ops,
   FUNCTION 1 pgl_gist_consistent(internal, internal, smallint, oid, internal),
   FUNCTION 2 pgl_gist_union(internal, internal),
   FUNCTION 3 pgl_gist_compress_ecluster(internal),

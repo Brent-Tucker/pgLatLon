@@ -502,14 +502,6 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
   double lat2, lon2;     /* latitude and (adjusted) longitude of next vertex */
   double lon;            /* longitude of intersection */
   int counter = 0;       /* counter for intersections east of point */
-  /* points outside bounding circle are always assumed to be non-overlapping */
-  /* (necessary for consistent table and index scans) */
-  if (
-    pgl_distance(
-      point->lat, point->lon,
-      cluster->bounding.center.lat, cluster->bounding.center.lon
-    ) > cluster->bounding.radius
-  ) return false;
   /* iterate over all entries */
   for (i=0; i<cluster->nentries; i++) {
     /* get properties of entry */
@@ -539,14 +531,22 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
         entrytype != PGL_ENTRY_OUTLINE &&
         entrytype != PGL_ENTRY_POLYGON
       ) continue;
-      /* get latitude and longitude values of edge */
-      lat1 = points[j].lat;
+      /* use previously calculated values for lat1 and lon1 if possible */
+      if (j) {
+        lat1 = lat2;
+        lon1 = lon2;
+      } else {
+        /* otherwise get latitude and longitude values of first vertex */
+        lat1 = points[0].lat;
+        lon1 = points[0].lon;
+        /* and consider longitude wrap-around for first vertex */
+        if      (lon_dir < 0 && lon1 > lon_break) lon1 = pgl_round(lon1 - 360);
+        else if (lon_dir > 0 && lon1 < lon_break) lon1 = pgl_round(lon1 + 360);
+      }
+      /* get latitude and longitude of next vertex */
       lat2 = points[k].lat;
-      lon1 = points[j].lon;
       lon2 = points[k].lon;
-      /* consider longitude wrap-around for edge */
-      if      (lon_dir < 0 && lon1 > lon_break) lon1 = pgl_round(lon1 - 360);
-      else if (lon_dir > 0 && lon1 < lon_break) lon1 = pgl_round(lon1 + 360);
+      /* consider longitude wrap-around for next vertex */
       if      (lon_dir < 0 && lon2 > lon_break) lon2 = pgl_round(lon2 - 360);
       else if (lon_dir > 0 && lon2 < lon_break) lon2 = pgl_round(lon2 + 360);
       /* return true if point is on horizontal (west to east) edge of polygon */
@@ -568,6 +568,231 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
   /* return true if number of intersections is odd */
   return counter & 1;
 }
+
+/* check if all points of the second cluster are inside the first cluster */
+static inline bool pgl_all_cluster_points_in_cluster(
+  pgl_cluster *outer, pgl_cluster *inner
+) {
+  int i, j;           /* i: entry, j: point in entry */
+  int npoints;        /* number of points in entry */
+  pgl_point *points;  /* array of points in entry */
+  /* iterate over all entries of "inner" cluster */
+  for (i=0; i<inner->nentries; i++) {
+    /* get properties of entry */
+    npoints = inner->entries[i].npoints;
+    points = PGL_ENTRY_POINTS(inner, i);
+    /* iterate over all points in entry of "inner" cluster */
+    for (j=0; j<npoints; j++) {
+      /* return false if one point of inner cluster is not in outer cluster */
+      if (!pgl_point_in_cluster(points+j, outer)) return false;
+    }
+  }
+  /* otherwise return true */
+  return true;
+}
+
+/* check if any point the second cluster is inside the first cluster */
+static inline bool pgl_any_cluster_points_in_cluster(
+  pgl_cluster *outer, pgl_cluster *inner
+) {
+  int i, j;           /* i: entry, j: point in entry */
+  int npoints;        /* number of points in entry */
+  pgl_point *points;  /* array of points in entry */
+  /* iterate over all entries of "inner" cluster */
+  for (i=0; i<inner->nentries; i++) {
+    /* get properties of entry */
+    npoints = inner->entries[i].npoints;
+    points = PGL_ENTRY_POINTS(inner, i);
+    /* iterate over all points in entry of "inner" cluster */
+    for (j=0; j<npoints; j++) {
+      /* return true if one point of inner cluster is in outer cluster */
+      if (pgl_point_in_cluster(points+j, outer)) return true;
+    }
+  }
+  /* otherwise return false */
+  return false;
+}
+
+/* check if line segment crosses line */
+/* returns -1 if yes, 1 if no, and 0 in corner cases */
+/* NOTE: each line (segment) must have a length greater than zero */
+static inline double pgl_lseg_crosses_line(
+  double seg_x1,  double seg_y1,  double seg_x2,  double seg_y2,
+  double line_x1, double line_y1, double line_x2, double line_y2,
+  bool strict
+) {
+  double value = (
+    (seg_x1-line_x1) * (line_y2-line_y1) -
+    (seg_y1-line_y1) * (line_x2-line_x1)
+  ) * (
+    (seg_x2-line_x1) * (line_y2-line_y1) -
+    (seg_y2-line_y1) * (line_x2-line_x1)
+  );
+  if (strict) return value < 0;
+  else return value <= 0;
+}
+
+/* check if paths and outlines of two clusters overlap */
+/* (set strict to true to disregard corner cases) */
+static bool pgl_outlines_overlap(
+  pgl_cluster *cluster1, pgl_cluster *cluster2, bool strict
+) {
+  int i1, j1, k1;  /* i: entry, j: point in entry, k: next point in entry */
+  int i2, j2, k2;
+  int entrytype1, entrytype2;     /* type of entry */
+  int npoints1, npoints2;         /* number of points in entry */
+  pgl_point *points1;             /* array of points in entry of cluster1 */
+  pgl_point *points2;             /* array of points in entry of cluster2 */
+  int lon_dir1, lon_dir2;         /* first vertex west (-1) or east (+1) */
+  double lon_break1, lon_break2;  /* antipodal longitude of first vertex */
+  double lat11, lon11;  /* latitude and (adjusted) longitude of vertex */
+  double lat12, lon12;  /* latitude and (adjusted) longitude of next vertex */
+  double lat21, lon21;  /* latitude and (adjusted) longitudes for cluster2 */
+  double lat22, lon22;
+  double wrapvalue;     /* temporary helper value to adjust wrap-around */  
+  /* iterate over all entries of cluster1 */
+  for (i1=0; i1<cluster1->nentries; i1++) {
+    /* get properties of entry in cluster1 and skip points */
+    npoints1 = cluster1->entries[i1].npoints;
+    if (npoints1 < 2) continue;
+    entrytype1 = cluster1->entries[i1].entrytype;
+    points1 = PGL_ENTRY_POINTS(cluster1, i1);
+    /* determine east/west orientation of first point and calculate antipodal
+       longitude */
+    lon_break1 = points1[0].lon;
+    if (lon_break1 < 0) {
+      lon_dir1   = -1;
+      lon_break1 = pgl_round(lon_break1 + 180);
+    } else if (lon_break1 > 0) {
+      lon_dir1   = 1;
+      lon_break1 = pgl_round(lon_break1 - 180);
+    } else lon_dir1 = 0;
+    /* iterate over all edges and vertices in cluster1 */
+    for (j1=0; j1<npoints1; j1++) {
+      /* calculate index of next vertex */
+      k1 = (j1+1) % npoints1;
+      /* skip last edge unless entry is (closed) outline or polygon */
+      if (
+        k1 == 0 &&
+        entrytype1 != PGL_ENTRY_OUTLINE &&
+        entrytype1 != PGL_ENTRY_POLYGON
+      ) continue;
+      /* use previously calculated values for lat1 and lon1 if possible */
+      if (j1) {
+        lat11 = lat12;
+        lon11 = lon12;
+      } else {
+        /* otherwise get latitude and longitude values of first vertex */
+        lat11 = points1[0].lat;
+        lon11 = points1[0].lon;
+        /* and consider longitude wrap-around for first vertex */
+        if      (lon_dir1<0 && lon11>lon_break1) lon11 = pgl_round(lon11-360);
+        else if (lon_dir1>0 && lon11<lon_break1) lon11 = pgl_round(lon11+360);
+      }
+      /* get latitude and longitude of next vertex */
+      lat12 = points1[k1].lat;
+      lon12 = points1[k1].lon;
+      /* consider longitude wrap-around for next vertex */
+      if      (lon_dir1<0 && lon12>lon_break1) lon12 = pgl_round(lon12-360);
+      else if (lon_dir1>0 && lon12<lon_break1) lon12 = pgl_round(lon12+360);
+      /* skip degenerated edges */
+      if (lat11 == lat12 && lon11 == lon12) continue;
+      /* iterate over all entries of cluster2 */
+      for (i2=0; i2<cluster2->nentries; i2++) {
+        /* get points and number of points of entry in cluster2 */
+        npoints2 = cluster2->entries[i2].npoints;
+        if (npoints2 < 2) continue;
+        entrytype2 = cluster2->entries[i2].entrytype;
+        points2 = PGL_ENTRY_POINTS(cluster2, i2);
+        /* determine east/west orientation of first point and calculate antipodal
+           longitude */
+        lon_break2 = points2[0].lon;
+        if (lon_break2 < 0) {
+          lon_dir2   = -1;
+          lon_break2 = pgl_round(lon_break2 + 180);
+        } else if (lon_break2 > 0) {
+          lon_dir2   = 1;
+          lon_break2 = pgl_round(lon_break2 - 180);
+        } else lon_dir2 = 0;
+        /* iterate over all edges and vertices in cluster2 */
+        for (j2=0; j2<npoints2; j2++) {
+          /* calculate index of next vertex */
+          k2 = (j2+1) % npoints2;
+          /* skip last edge unless entry is (closed) outline or polygon */
+          if (
+            k2 == 0 &&
+            entrytype2 != PGL_ENTRY_OUTLINE &&
+            entrytype2 != PGL_ENTRY_POLYGON
+          ) continue;
+          /* use previously calculated values for lat1 and lon1 if possible */
+          if (j2) {
+            lat21 = lat22;
+            lon21 = lon22;
+          } else {
+            /* otherwise get latitude and longitude values of first vertex */
+            lat21 = points2[0].lat;
+            lon21 = points2[0].lon;
+            /* and consider longitude wrap-around for first vertex */
+            if      (lon_dir2<0 && lon21>lon_break2) lon21 = pgl_round(lon21-360);
+            else if (lon_dir2>0 && lon21<lon_break2) lon21 = pgl_round(lon21+360);
+          }
+          /* get latitude and longitude of next vertex */
+          lat22 = points2[k2].lat;
+          lon22 = points2[k2].lon;
+          /* consider longitude wrap-around for next vertex */
+          if      (lon_dir2<0 && lon22>lon_break2) lon22 = pgl_round(lon22-360);
+          else if (lon_dir2>0 && lon22<lon_break2) lon22 = pgl_round(lon22+360);
+          /* skip degenerated edges */
+          if (lat21 == lat22 && lon21 == lon22) continue;
+          /* perform another wrap-around where necessary */
+          /* TODO: improve performance of whole wrap-around mechanism */
+          wrapvalue = (lon21 + lon22) - (lon11 + lon12);
+          if (wrapvalue > 360) {
+            lon21 = pgl_round(lon21 - 360);
+            lon22 = pgl_round(lon22 - 360);
+          } else if (wrapvalue < -360) {
+            lon21 = pgl_round(lon21 + 360);
+            lon22 = pgl_round(lon22 + 360);
+          }
+          /* return true if segments overlap */
+          if (
+            pgl_lseg_crosses_line(
+              lat11, lon11, lat12, lon12,
+              lat21, lon21, lat22, lon22,
+              strict
+            ) && pgl_lseg_crosses_line(
+              lat21, lon21, lat22, lon22,
+              lat11, lon11, lat12, lon12,
+              strict
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  /* otherwise return false */
+  return false;
+}
+
+/* check if second cluster is completely contained in first cluster */
+static bool pgl_cluster_in_cluster(pgl_cluster *outer, pgl_cluster *inner) {
+  if (!pgl_all_cluster_points_in_cluster(outer, inner)) return false;
+  if (pgl_outlines_overlap(outer, inner, true)) return false;
+  return true;
+}
+
+/* check if two clusters overlap */
+static bool pgl_clusters_overlap(
+  pgl_cluster *cluster1, pgl_cluster *cluster2
+) {
+  if (pgl_any_cluster_points_in_cluster(cluster1, cluster2)) return true;
+  if (pgl_any_cluster_points_in_cluster(cluster2, cluster1)) return true;
+  if (pgl_outlines_overlap(cluster1, cluster2, false)) return true;
+  return false;
+}
+
 
 /* calculate (approximate) distance between point and cluster */
 static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster) {
@@ -622,12 +847,18 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
     else if (lon_dir > 0 && lon0 < lon_break) lon0 += 360;
     /* iterate over all edges and vertices */
     for (j=0; j<npoints; j++) {
-      /* get latitude and longitude values of current point */
-      lat1 = points[j].lat;
-      lon1 = points[j].lon;
-      /* consider longitude wrap-around for current point */
-      if      (lon_dir < 0 && lon1 > lon_break) lon1 -= 360;
-      else if (lon_dir > 0 && lon1 < lon_break) lon1 += 360;
+      /* use previously calculated values for lat1 and lon1 if possible */
+      if (j) {
+        lat1 = lat2;
+        lon1 = lon2;
+      } else {
+        /* otherwise get latitude and longitude values of first vertex */
+        lat1 = points[0].lat;
+        lon1 = points[0].lon;
+        /* and consider longitude wrap-around for first vertex */
+        if      (lon_dir < 0 && lon1 > lon_break) lon1 -= 360;
+        else if (lon_dir > 0 && lon1 < lon_break) lon1 += 360;
+      }
       /* calculate distance to vertex */
       dist = pgl_distance(lat0, lon0, lat1, lon1);
       /* store calculated distance if smallest */
@@ -640,10 +871,10 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
         entrytype != PGL_ENTRY_OUTLINE &&
         entrytype != PGL_ENTRY_POLYGON
       ) continue;
-      /* get latitude and longitude values of next point */
+      /* get latitude and longitude of next vertex */
       lat2 = points[k].lat;
       lon2 = points[k].lon;
-      /* consider longitude wrap-around for next point */
+      /* consider longitude wrap-around for next vertex */
       if      (lon_dir < 0 && lon2 > lon_break) lon2 -= 360;
       else if (lon_dir > 0 && lon2 < lon_break) lon2 += 360;
       /* go to next vertex and edge if edge is degenerated */
@@ -669,74 +900,79 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
   return min_dist;
 }
 
+/* calculate (approximate) distance between two clusters */
+static double pgl_cluster_distance(pgl_cluster *cluster1, pgl_cluster *cluster2) {
+  int i, j;                    /* i: entry, j: point in entry */
+  int npoints;                 /* number of points in entry */
+  pgl_point *points;           /* array of points in entry */
+  double dist;                 /* distance calculated in one step */
+  double min_dist = INFINITY;  /* minimum distance */
+  /* consider distance from each point in one cluster to the whole other */
+  for (i=0; i<cluster1->nentries; i++) {
+    npoints = cluster1->entries[i].npoints;
+    points = PGL_ENTRY_POINTS(cluster1, i);
+    for (j=0; j<npoints; j++) {
+      dist = pgl_point_cluster_distance(points+j, cluster2);
+      if (dist == 0) return dist;
+      if (dist < min_dist) min_dist = dist;
+    }
+  }
+  /* consider distance from each point in other cluster to the first cluster */
+  for (i=0; i<cluster2->nentries; i++) {
+    npoints = cluster2->entries[i].npoints;
+    points = PGL_ENTRY_POINTS(cluster2, i);
+    for (j=0; j<npoints; j++) {
+      dist = pgl_point_cluster_distance(points+j, cluster1);
+      if (dist == 0) return dist;
+      if (dist < min_dist) min_dist = dist;
+    }
+  }
+  return min_dist;
+}
+
 /* estimator function for distance between box and point */
-/* allowed to return smaller values than actually correct */
+/* always returns a smaller value than actually correct or zero */
 static double pgl_estimate_point_box_distance(pgl_point *point, pgl_box *box) {
-  double dlon;  /* longitude range of box (delta longitude) */
-  double h;     /* half of distance along meridian */
-  double d;     /* distance between both southern or both northern points */
-  double cur_dist;  /* calculated distance */
-  double min_dist;  /* minimum distance calculated */
-  /* return infinity if bounding box is empty */
+  double dlon;      /* longitude range of box (delta longitude) */
+  double distance;  /* return value */
+  /* return infinity if box is empty */
   if (box->lat_min > box->lat_max) return INFINITY;
-  /* return zero if point is inside bounding box */
+  /* return zero if point is inside box */
   if (pgl_point_in_box(point, box)) return 0;
   /* calculate delta longitude */
   dlon = box->lon_max - box->lon_min;
   if (dlon < 0) dlon += 360;  /* 180th meridian crossed */
-  /* if delta longitude is greater than 180 degrees, perform safe fall-back */
-  if (dlon > 180) return 0;
-  /* calculate half of distance along meridian */
-  h = pgl_distance(box->lat_min, 0, box->lat_max, 0) / 2;
-  /* calculate full distance between southern points */
-  d = pgl_distance(box->lat_min, 0, box->lat_min, dlon);
-  /* calculate maximum of full distance and half distance */
-  if (h > d) d = h;
-  /* calculate distance from point to first southern vertex and substract
-     maximum error */
-  min_dist = pgl_distance(
-    point->lat, point->lon, box->lat_min, box->lon_min
-  ) - d;
-  /* return zero if estimated distance is smaller than zero */
-  if (min_dist <= 0) return 0;
-  /* repeat procedure with second southern vertex */
-  cur_dist = pgl_distance(
-    point->lat, point->lon, box->lat_min, box->lon_max
-  ) - d;
-  if (cur_dist <= 0) return 0;
-  if (cur_dist < min_dist) min_dist = cur_dist;
-  /* calculate full distance between northern points */
-  d = pgl_distance(box->lat_max, 0, box->lat_max, dlon);
-  /* calculate maximum of full distance and half distance */
-  if (h > d) d = h;
-  /* repeat procedure with northern vertices */
-  cur_dist = pgl_distance(
-    point->lat, point->lon, box->lat_max, box->lon_max
-  ) - d;
-  if (cur_dist <= 0) return 0;
-  if (cur_dist < min_dist) min_dist = cur_dist;
-  cur_dist = pgl_distance(
-    point->lat, point->lon, box->lat_max, box->lon_min
-  ) - d;
-  if (cur_dist <= 0) return 0;
-  if (cur_dist < min_dist) min_dist = cur_dist;
-  /* return smallest value (unless already returned zero) */
-  return min_dist;
+  /* if delta longitude is greater than 150 degrees, perform safe fall-back */
+  if (dlon > 150) return 0;
+  /* calculate lower limit for distance (formula below requires dlon <= 150) */
+  /* TODO: provide better estimation function to improve performance */
+  distance = (
+    (1.0-1e-14) * pgl_distance(
+      point->lat,
+      point->lon,
+      (box->lat_min + box->lat_max) / 2,
+      box->lon_min + dlon/2
+    ) - pgl_distance(
+      box->lat_min, box->lon_min,
+      box->lat_max, box->lon_max
+    )
+  );
+  /* truncate negative results to zero */
+  if (distance <= 0) distance = 0;
+  /* return result */
+  return distance;
 }
 
 
-/*----------------------------*
- *  fractal geographic index  *
- *----------------------------*/
+/*-------------------------------------------------*
+ *  geographic index based on space-filling curve  *
+ *-------------------------------------------------*/
 
 /* number of bytes used for geographic (center) position in keys */
 #define PGL_KEY_LATLON_BYTELEN 7
 
 /* maximum reference value for logarithmic size of geographic objects */
 #define PGL_AREAKEY_REFOBJSIZE (PGL_DIAMETER/3.0)  /* can be tweaked */
-
-/* safety margin to avoid floating point errors in distance estimation */
-#define PGL_FPE_SAFETY (1.0+1e-14)  /* slightly greater than 1.0 */
 
 /* pointer to index key (either pgl_pointkey or pgl_areakey) */
 typedef unsigned char *pgl_keyptr;
@@ -1094,7 +1330,7 @@ static double pgl_key_to_box(pgl_keyptr key, pgl_box *box) {
 }
 
 /* estimator function for distance between point and index key */
-/* allowed to return smaller values than actually correct */
+/* always returns a smaller value than actually correct or zero */
 static double pgl_estimate_key_distance(pgl_keyptr key, pgl_point *point) {
   pgl_box box;  /* center(!) bounding box of area index key */
   /* calculate center(!) bounding box and maximum radius of objects covered
@@ -1103,11 +1339,7 @@ static double pgl_estimate_key_distance(pgl_keyptr key, pgl_point *point) {
   /* calculate estimated distance between bounding box of center point of
      indexed object and point passed as second argument, then substract maximum
      radius of objects covered by index key */
-  /* (use PGL_FPE_SAFETY factor to cope with minor floating point errors) */
-  distance = (
-    pgl_estimate_point_box_distance(point, &box) / PGL_FPE_SAFETY -
-    distance * PGL_FPE_SAFETY
-  );
+  distance = pgl_estimate_point_box_distance(point, &box) - distance;
   /* truncate negative results to zero */
   if (distance <= 0) distance = 0;
   /* return result */
@@ -2102,7 +2334,16 @@ PG_FUNCTION_INFO_V1(pgl_epoint_ecluster_overlap);
 Datum pgl_epoint_ecluster_overlap(PG_FUNCTION_ARGS) {
   pgl_point *point = (pgl_point *)PG_GETARG_POINTER(0);
   pgl_cluster *cluster = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-  bool retval = pgl_point_in_cluster(point, cluster);
+  bool retval;
+  /* points outside bounding circle are always assumed to be non-overlapping
+     (necessary for consistent table and index scans) */
+  if (
+    pgl_distance(
+      point->lat, point->lon,
+      cluster->bounding.center.lat, cluster->bounding.center.lon
+    ) > cluster->bounding.radius
+  ) retval = false;
+  else retval = pgl_point_in_cluster(point, cluster);
   PG_FREE_IF_COPY(cluster, 1);
   PG_RETURN_BOOL(retval);
 }
@@ -2189,6 +2430,27 @@ Datum pgl_ecircle_ecluster_may_overlap(PG_FUNCTION_ARGS) {
   PG_RETURN_BOOL(retval);
 }
 
+/* check if two clusters overlap (overlap operator "&&") in SQL */
+PG_FUNCTION_INFO_V1(pgl_ecluster_overlap);
+Datum pgl_ecluster_overlap(PG_FUNCTION_ARGS) {
+  pgl_cluster *cluster1 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  pgl_cluster *cluster2 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval;
+  /* clusters with non-touching bounding circles are always assumed to be
+     non-overlapping (improves performance and is necessary for consistent
+     table and index scans) */
+  if (
+    pgl_distance(
+      cluster1->bounding.center.lat, cluster1->bounding.center.lon,
+      cluster2->bounding.center.lat, cluster2->bounding.center.lon
+    ) > cluster1->bounding.radius + cluster2->bounding.radius
+  ) retval = false;
+  else retval = pgl_clusters_overlap(cluster1, cluster2);
+  PG_FREE_IF_COPY(cluster1, 0);
+  PG_FREE_IF_COPY(cluster2, 1);
+  PG_RETURN_BOOL(retval);
+}
+
 /* check if two clusters may overlap (lossy overlap operator "&&+") in SQL */
 PG_FUNCTION_INFO_V1(pgl_ecluster_may_overlap);
 Datum pgl_ecluster_may_overlap(PG_FUNCTION_ARGS) {
@@ -2200,6 +2462,27 @@ Datum pgl_ecluster_may_overlap(PG_FUNCTION_ARGS) {
   ) <= cluster1->bounding.radius + cluster2->bounding.radius;
   PG_FREE_IF_COPY(cluster1, 0);
   PG_FREE_IF_COPY(cluster2, 1);
+  PG_RETURN_BOOL(retval);
+}
+
+/* check if second cluster is in first cluster (cont. operator "@>) in SQL */
+PG_FUNCTION_INFO_V1(pgl_ecluster_contains);
+Datum pgl_ecluster_contains(PG_FUNCTION_ARGS) {
+  pgl_cluster *outer = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  pgl_cluster *inner = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  bool retval;
+  /* clusters with non-touching bounding circles are always assumed to be
+     non-overlapping (improves performance and is necessary for consistent
+     table and index scans) */
+  if (
+    pgl_distance(
+      outer->bounding.center.lat, outer->bounding.center.lon,
+      inner->bounding.center.lat, inner->bounding.center.lon
+    ) > outer->bounding.radius + inner->bounding.radius
+  ) retval = false;
+  else retval = pgl_cluster_in_cluster(outer, inner);
+  PG_FREE_IF_COPY(outer, 0);
+  PG_FREE_IF_COPY(inner, 1);
   PG_RETURN_BOOL(retval);
 }
 
@@ -2256,6 +2539,17 @@ Datum pgl_ecircle_ecluster_distance(PG_FUNCTION_ARGS) {
   );
   PG_FREE_IF_COPY(cluster, 1);
   PG_RETURN_FLOAT8((distance <= 0) ? 0 : distance);
+}
+
+/* calculate distance between two clusters ("<->" operator) in SQL */
+PG_FUNCTION_INFO_V1(pgl_ecluster_distance);
+Datum pgl_ecluster_distance(PG_FUNCTION_ARGS) {
+  pgl_cluster *cluster1 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  pgl_cluster *cluster2 = (pgl_cluster *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  double retval = pgl_cluster_distance(cluster1, cluster2);
+  PG_FREE_IF_COPY(cluster1, 0);
+  PG_FREE_IF_COPY(cluster2, 1);
+  PG_RETURN_FLOAT8(retval);
 }
 
 

@@ -1,4 +1,4 @@
-pgLatLon v0.3 documentation
+pgLatLon v0.4 documentation
 ===========================
 
 pgLatLon is a spatial database extension for the PostgreSQL object-relational
@@ -55,6 +55,38 @@ follows:
     Type "help" for help.
 
     test_database=# CREATE EXTENSION latlon;
+
+### Updating
+
+Before updating your database cluster to a new version of pgLatLon, you may
+want to uninstall the old by calling "`make uninstall`" in the unpacked source
+code directory of your old pgLatLon version. You may also manually delete the
+`latlon-v????.so` files from your PostgreSQL library directory and the
+`latlon.control` and `latlon--*.sql` files from your PostgreSQL extension
+directory.
+
+The new version can be installed as described above. For altering an existing
+database to use the installed new version (mandatory if you removed the old
+version), execute the following SQL command in the respective databases:
+
+    ALTER EXTENSION latlon UPDATE;
+
+If the update contains modifications to operator classes, it may be necessary
+to drop all indices on geographic data types first (you will get an error
+message in this case). These indices can be re-created after the update.
+
+Note that taking several update steps at once (e.g. updating from version 0.2
+directly to version 0.4) requires the intermediate versions to be installed
+(i.e. in this example version 0.3 would need to be installed). Whenever you
+install or uninstall an intermediate or old version, make sure to afterwards
+re-install the latest pgLatLon version to ensure that the `latlon.control` file
+is available and points to the latest version.
+
+If the update contains modifications to the internal data representation
+format, an update path might not be available. In this case, create a dump of
+your database, delete your database, and restore it from your dump.
+
+Be sure to always keep backups of all your data before attempting to update.
 
 
 Reference
@@ -236,8 +268,11 @@ implemented for:
 * `epoint && ecircle`
 * `epoint && ecluster`
 * `ebox && ebox`
+* `ebox && ecircle`
+* `ebox && ecluster`
 * `ecircle && ecircle`
 * `ecircle && ecluster`
+* `ecluster && ecluster`
 
 The `&&` operator is commutative, i.e. `a && b` is the same as `b && a`. Each
 commutation is supported as well.
@@ -254,11 +289,25 @@ currently implemented for:
 * `ecircle &&+ ecluster`
 * `ecluster &&+ ecluster`
 
-The `&&+` operator is commutative, i.e. `a &&+ b` is the same as `b &&+ a`. Each
-commutation is supported as well.
+The `&&+` operator is commutative, i.e. `a &&+ b` is the same as `b &&+ a`.
+Each commutation is supported as well.
 
 Where two data types support both the `&&` and the `&&+` operator, the `&&+`
 operator computes faster.
+
+#### Contains operator `@>`
+
+Tests if the object right of the operator is contained in the object left of
+the operator. Currently implemented for:
+
+* `ebox @> epoint` (alias for `&&`)
+* `ebox @> ecluster`
+* `ecluster @> epoint` (alias for `&&`)
+* `ecluster @> ebox`
+* `ecluster @> ecluster`
+
+The commutator of `@>` ("contains") is `<@` ("is contained in"), i.e. `a @> b`
+is the same as `b <@ a`.
 
 #### Distance operator `<->`
 
@@ -266,10 +315,15 @@ Calculates the shortest distance between two geographic objects in meters (zero
 if the objects are overlapping). Currently implemented for:
 
 * `epoint <-> epoint`
+* `epoint <-> ebox`
 * `epoint <-> ecircle`
 * `epoint <-> ecluster`
+* `ebox <-> ebox`
+* `ebox <-> ecircle`
+* `ebox <-> ecluster`
 * `ecircle <-> ecircle`
 * `ecircle <-> ecluster`
+* `ecluster <-> ecluster`
 
 The `<->` operator is commutative, i.e. `a <-> b` is the same as `b <-> a`.
 Each commutation is supported as well.

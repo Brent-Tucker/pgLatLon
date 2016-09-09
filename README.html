@@ -1,5 +1,5 @@
-<html><head><title>pgLatLon v0.3 documentation</title></head><body>
-<h1>pgLatLon v0.3 documentation</h1>
+<html><head><title>pgLatLon v0.4 documentation</title></head><body>
+<h1>pgLatLon v0.4 documentation</h1>
 
 <p>pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
@@ -58,6 +58,39 @@ Type "help" for help.
 
 test_database=# CREATE EXTENSION latlon;
 </code></pre>
+
+<h3>Updating</h3>
+
+<p>Before updating your database cluster to a new version of pgLatLon, you may
+want to uninstall the old by calling "<code>make uninstall</code>" in the unpacked source
+code directory of your old pgLatLon version. You may also manually delete the
+<code>latlon-v????.so</code> files from your PostgreSQL library directory and the
+<code>latlon.control</code> and <code>latlon--*.sql</code> files from your PostgreSQL extension
+directory.</p>
+
+<p>The new version can be installed as described above. For altering an existing
+database to use the installed new version (mandatory if you removed the old
+version), execute the following SQL command in the respective databases:</p>
+
+<pre><code>ALTER EXTENSION latlon UPDATE;
+</code></pre>
+
+<p>If the update contains modifications to operator classes, it may be necessary
+to drop all indices on geographic data types first (you will get an error
+message in this case). These indices can be re-created after the update.</p>
+
+<p>Note that taking several update steps at once (e.g. updating from version 0.2
+directly to version 0.4) requires the intermediate versions to be installed
+(i.e. in this example version 0.3 would need to be installed). Whenever you
+install or uninstall an intermediate or old version, make sure to afterwards
+re-install the latest pgLatLon version to ensure that the <code>latlon.control</code> file
+is available and points to the latest version.</p>
+
+<p>If the update contains modifications to the internal data representation
+format, an update path might not be available. In this case, create a dump of
+your database, delete your database, and restore it from your dump.</p>
+
+<p>Be sure to always keep backups of all your data before attempting to update.</p>
 
 <h2>Reference</h2>
 
@@ -245,8 +278,11 @@ implemented for:</p>
 <li><code>epoint &amp;&amp; ecircle</code></li>
 <li><code>epoint &amp;&amp; ecluster</code></li>
 <li><code>ebox &amp;&amp; ebox</code></li>
+<li><code>ebox &amp;&amp; ecircle</code></li>
+<li><code>ebox &amp;&amp; ecluster</code></li>
 <li><code>ecircle &amp;&amp; ecircle</code></li>
 <li><code>ecircle &amp;&amp; ecluster</code></li>
+<li><code>ecluster &amp;&amp; ecluster</code></li>
 </ul>
 
 <p>The <code>&amp;&amp;</code> operator is commutative, i.e. <code>a &amp;&amp; b</code> is the same as <code>b &amp;&amp; a</code>. Each
@@ -266,11 +302,27 @@ currently implemented for:</p>
 <li><code>ecluster &amp;&amp;+ ecluster</code></li>
 </ul>
 
-<p>The <code>&amp;&amp;+</code> operator is commutative, i.e. <code>a &amp;&amp;+ b</code> is the same as <code>b &amp;&amp;+ a</code>. Each
-commutation is supported as well.</p>
+<p>The <code>&amp;&amp;+</code> operator is commutative, i.e. <code>a &amp;&amp;+ b</code> is the same as <code>b &amp;&amp;+ a</code>.
+Each commutation is supported as well.</p>
 
 <p>Where two data types support both the <code>&amp;&amp;</code> and the <code>&amp;&amp;+</code> operator, the <code>&amp;&amp;+</code>
 operator computes faster.</p>
+
+<h4>Contains operator <code>@&gt;</code></h4>
+
+<p>Tests if the object right of the operator is contained in the object left of
+the operator. Currently implemented for:</p>
+
+<ul>
+<li><code>ebox @&gt; epoint</code> (alias for <code>&amp;&amp;</code>)</li>
+<li><code>ebox @&gt; ecluster</code></li>
+<li><code>ecluster @&gt; epoint</code> (alias for <code>&amp;&amp;</code>)</li>
+<li><code>ecluster @&gt; ebox</code></li>
+<li><code>ecluster @&gt; ecluster</code></li>
+</ul>
+
+<p>The commutator of <code>@&gt;</code> ("contains") is <code>&lt;@</code> ("is contained in"), i.e. <code>a @&gt; b</code>
+is the same as <code>b &lt;@ a</code>.</p>
 
 <h4>Distance operator <code>&lt;-&gt;</code></h4>
 
@@ -279,10 +331,15 @@ if the objects are overlapping). Currently implemented for:</p>
 
 <ul>
 <li><code>epoint &lt;-&gt; epoint</code></li>
+<li><code>epoint &lt;-&gt; ebox</code></li>
 <li><code>epoint &lt;-&gt; ecircle</code></li>
 <li><code>epoint &lt;-&gt; ecluster</code></li>
+<li><code>ebox &lt;-&gt; ebox</code></li>
+<li><code>ebox &lt;-&gt; ecircle</code></li>
+<li><code>ebox &lt;-&gt; ecluster</code></li>
 <li><code>ecircle &lt;-&gt; ecircle</code></li>
 <li><code>ecircle &lt;-&gt; ecluster</code></li>
+<li><code>ecluster &lt;-&gt; ecluster</code></li>
 </ul>
 
 <p>The <code>&lt;-&gt;</code> operator is commutative, i.e. <code>a &lt;-&gt; b</code> is the same as <code>b &lt;-&gt; a</code>.
