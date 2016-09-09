@@ -2417,7 +2417,7 @@ Datum pgl_ecircle_ecluster_overlap(PG_FUNCTION_ARGS) {
   PG_RETURN_BOOL(retval);
 }
 
-/* check if circle and cluster may be overlap (l. ov. operator "&&+") in SQL */
+/* check if circle and cluster may overlap (l. ov. operator "&&+") in SQL */
 PG_FUNCTION_INFO_V1(pgl_ecircle_ecluster_may_overlap);
 Datum pgl_ecircle_ecluster_may_overlap(PG_FUNCTION_ARGS) {
   pgl_circle *circle = (pgl_circle *)PG_GETARG_POINTER(0);
