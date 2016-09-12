@@ -489,7 +489,13 @@ static bool pgl_finalize_cluster(pgl_cluster *cluster) {
 }
 
 /* check if point is inside cluster */
-static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
+/* (if point is on perimeter, then true is returned if and only if
+   strict == false) */
+static bool pgl_point_in_cluster(
+  pgl_point *point,
+  pgl_cluster *cluster,
+  bool strict
+) {
   int i, j, k;  /* i: entry, j: point in entry, k: next point in entry */
   int entrytype;         /* type of entry */
   int npoints;           /* number of points in entry */
@@ -504,8 +510,11 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
   int counter = 0;       /* counter for intersections east of point */
   /* iterate over all entries */
   for (i=0; i<cluster->nentries; i++) {
-    /* get properties of entry */
+    /* get type of entry */
     entrytype = cluster->entries[i].entrytype;
+    /* skip all entries but polygons if perimeters are excluded */
+    if (strict && entrytype != PGL_ENTRY_POLYGON) continue;
+    /* get points of entry */
     npoints = cluster->entries[i].npoints;
     points = PGL_ENTRY_POINTS(cluster, i);
     /* determine east/west orientation of first point of entry and calculate
@@ -521,8 +530,8 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
     else if (lon_dir > 0 && lon0 < lon_break) lon0 = pgl_round(lon0 + 360);
     /* iterate over all edges and vertices */
     for (j=0; j<npoints; j++) {
-      /* return true if point is on vertex of polygon */
-      if (pgl_point_cmp(point, &(points[j])) == 0) return true;
+      /* return if point is on vertex of polygon */
+      if (pgl_point_cmp(point, &(points[j])) == 0) return !strict;
       /* calculate index of next vertex */
       k = (j+1) % npoints;
       /* skip last edge unless entry is (closed) outline or polygon */
@@ -549,17 +558,17 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
       /* consider longitude wrap-around for next vertex */
       if      (lon_dir < 0 && lon2 > lon_break) lon2 = pgl_round(lon2 - 360);
       else if (lon_dir > 0 && lon2 < lon_break) lon2 = pgl_round(lon2 + 360);
-      /* return true if point is on horizontal (west to east) edge of polygon */
+      /* return if point is on horizontal (west to east) edge of polygon */
       if (
         lat0 == lat1 && lat0 == lat2 &&
         ( (lon0 >= lon1 && lon0 <= lon2) || (lon0 >= lon2 && lon0 <= lon1) )
-      ) return true;
+      ) return !strict;
       /* check if edge crosses east/west line of point */
       if ((lat1 < lat0 && lat2 >= lat0) || (lat2 < lat0 && lat1 >= lat0)) {
         /* calculate longitude of intersection */
         lon = (lon1 * (lat2-lat0) + lon2 * (lat0-lat1)) / (lat2-lat1);
-        /* return true if intersection goes (approximately) through point */
-        if (pgl_round(lon) == lon0) return true;
+        /* return if intersection goes (approximately) through point */
+        if (pgl_round(lon) == lon0) return !strict;
         /* count intersection if east of point and entry is polygon*/
         if (entrytype == PGL_ENTRY_POLYGON && lon > lon0) counter++;
       }
@@ -569,8 +578,9 @@ static bool pgl_point_in_cluster(pgl_point *point, pgl_cluster *cluster) {
   return counter & 1;
 }
 
-/* check if all points of the second cluster are inside the first cluster */
-static inline bool pgl_all_cluster_points_in_cluster(
+/* check if all points of the second cluster are strictly inside the first
+   cluster */
+static inline bool pgl_all_cluster_points_strictly_in_cluster(
   pgl_cluster *outer, pgl_cluster *inner
 ) {
   int i, j;           /* i: entry, j: point in entry */
@@ -584,7 +594,7 @@ static inline bool pgl_all_cluster_points_in_cluster(
     /* iterate over all points in entry of "inner" cluster */
     for (j=0; j<npoints; j++) {
       /* return false if one point of inner cluster is not in outer cluster */
-      if (!pgl_point_in_cluster(points+j, outer)) return false;
+      if (!pgl_point_in_cluster(points+j, outer, true)) return false;
     }
   }
   /* otherwise return true */
@@ -606,36 +616,33 @@ static inline bool pgl_any_cluster_points_in_cluster(
     /* iterate over all points in entry of "inner" cluster */
     for (j=0; j<npoints; j++) {
       /* return true if one point of inner cluster is in outer cluster */
-      if (pgl_point_in_cluster(points+j, outer)) return true;
+      if (pgl_point_in_cluster(points+j, outer, false)) return true;
     }
   }
   /* otherwise return false */
   return false;
 }
 
-/* check if line segment crosses line */
-/* returns -1 if yes, 1 if no, and 0 in corner cases */
-/* NOTE: each line (segment) must have a length greater than zero */
-static inline double pgl_lseg_crosses_line(
+/* check if line segment strictly crosses line (not just touching) */
+static inline bool pgl_lseg_crosses_line(
   double seg_x1,  double seg_y1,  double seg_x2,  double seg_y2,
-  double line_x1, double line_y1, double line_x2, double line_y2,
-  bool strict
+  double line_x1, double line_y1, double line_x2, double line_y2
 ) {
-  double value = (
-    (seg_x1-line_x1) * (line_y2-line_y1) -
-    (seg_y1-line_y1) * (line_x2-line_x1)
-  ) * (
-    (seg_x2-line_x1) * (line_y2-line_y1) -
-    (seg_y2-line_y1) * (line_x2-line_x1)
-  );
-  if (strict) return value < 0;
-  else return value <= 0;
+  return (
+    (
+      (seg_x1-line_x1) * (line_y2-line_y1) -
+      (seg_y1-line_y1) * (line_x2-line_x1)
+    ) * (
+      (seg_x2-line_x1) * (line_y2-line_y1) -
+      (seg_y2-line_y1) * (line_x2-line_x1)
+    )
+  ) < 0;
 }
 
-/* check if paths and outlines of two clusters overlap */
-/* (set strict to true to disregard corner cases) */
+/* check if paths and outlines of two clusters strictly overlap (not just
+   touching) */
 static bool pgl_outlines_overlap(
-  pgl_cluster *cluster1, pgl_cluster *cluster2, bool strict
+  pgl_cluster *cluster1, pgl_cluster *cluster2
 ) {
   int i1, j1, k1;  /* i: entry, j: point in entry, k: next point in entry */
   int i2, j2, k2;
@@ -758,12 +765,10 @@ static bool pgl_outlines_overlap(
           if (
             pgl_lseg_crosses_line(
               lat11, lon11, lat12, lon12,
-              lat21, lon21, lat22, lon22,
-              strict
+              lat21, lon21, lat22, lon22
             ) && pgl_lseg_crosses_line(
               lat21, lon21, lat22, lon22,
-              lat11, lon11, lat12, lon12,
-              strict
+              lat11, lon11, lat12, lon12
             )
           ) {
             return true;
@@ -778,8 +783,9 @@ static bool pgl_outlines_overlap(
 
 /* check if second cluster is completely contained in first cluster */
 static bool pgl_cluster_in_cluster(pgl_cluster *outer, pgl_cluster *inner) {
-  if (!pgl_all_cluster_points_in_cluster(outer, inner)) return false;
-  if (pgl_outlines_overlap(outer, inner, true)) return false;
+  if (!pgl_all_cluster_points_strictly_in_cluster(outer, inner)) return false;
+  if (pgl_any_cluster_points_in_cluster(inner, outer)) return false;
+  if (pgl_outlines_overlap(outer, inner)) return false;
   return true;
 }
 
@@ -789,7 +795,7 @@ static bool pgl_clusters_overlap(
 ) {
   if (pgl_any_cluster_points_in_cluster(cluster1, cluster2)) return true;
   if (pgl_any_cluster_points_in_cluster(cluster2, cluster1)) return true;
-  if (pgl_outlines_overlap(cluster1, cluster2, false)) return true;
+  if (pgl_outlines_overlap(cluster1, cluster2)) return true;
   return false;
 }
 
@@ -812,7 +818,7 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
   double dist;           /* distance calculated in one step */
   double min_dist = INFINITY;   /* minimum distance */
   /* distance is zero if point is contained in cluster */
-  if (pgl_point_in_cluster(point, cluster)) return 0;
+  if (pgl_point_in_cluster(point, cluster, false)) return 0;
   /* iterate over all entries */
   for (i=0; i<cluster->nentries; i++) {
     /* get properties of entry */
@@ -2343,7 +2349,7 @@ Datum pgl_epoint_ecluster_overlap(PG_FUNCTION_ARGS) {
       cluster->bounding.center.lat, cluster->bounding.center.lon
     ) > cluster->bounding.radius
   ) retval = false;
-  else retval = pgl_point_in_cluster(point, cluster);
+  else retval = pgl_point_in_cluster(point, cluster, false);
   PG_FREE_IF_COPY(cluster, 1);
   PG_RETURN_BOOL(retval);
 }

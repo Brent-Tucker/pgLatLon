@@ -1,5 +1,5 @@
-<html><head><title>pgLatLon v0.4 documentation</title></head><body>
-<h1>pgLatLon v0.4 documentation</h1>
+<html><head><title>pgLatLon v0.5 documentation</title></head><body>
+<h1>pgLatLon v0.5 documentation</h1>
 
 <p>pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
@@ -40,8 +40,8 @@ GPLv2/v3.</p>
 <p>It is also possible to compile and install the extension without GNU Make as
 follows:</p>
 
-<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0003.so latlon-v0003.c
-cp latlon-v0003.so `pg_config --pkglibdir`
+<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0005.so latlon-v0005.c
+cp latlon-v0005.so `pg_config --pkglibdir`
 cp latlon.control `pg_config --sharedir`/extension/
 cp latlon--*.sql `pg_config --sharedir`/extension/
 </code></pre>
@@ -285,8 +285,8 @@ implemented for:</p>
 <li><code>ecluster &amp;&amp; ecluster</code></li>
 </ul>
 
-<p>The <code>&amp;&amp;</code> operator is commutative, i.e. <code>a &amp;&amp; b</code> is the same as <code>b &amp;&amp; a</code>. Each
-commutation is supported as well.</p>
+<p>The <code>&amp;&amp;</code> operator is commutative, i.e. "<code>a &amp;&amp; b</code>" is the same as "<code>b &amp;&amp; a</code>".
+Each commutation is supported as well.</p>
 
 <h4>Lossy overlap operator <code>&amp;&amp;+</code></h4>
 
@@ -302,7 +302,7 @@ currently implemented for:</p>
 <li><code>ecluster &amp;&amp;+ ecluster</code></li>
 </ul>
 
-<p>The <code>&amp;&amp;+</code> operator is commutative, i.e. <code>a &amp;&amp;+ b</code> is the same as <code>b &amp;&amp;+ a</code>.
+<p>The <code>&amp;&amp;+</code> operator is commutative, i.e. "<code>a &amp;&amp;+ b</code>" is the same as "<code>b &amp;&amp;+ a</code>".
 Each commutation is supported as well.</p>
 
 <p>Where two data types support both the <code>&amp;&amp;</code> and the <code>&amp;&amp;+</code> operator, the <code>&amp;&amp;+</code>
@@ -315,14 +315,21 @@ the operator. Currently implemented for:</p>
 
 <ul>
 <li><code>ebox @&gt; epoint</code> (alias for <code>&amp;&amp;</code>)</li>
+<li><code>ebox @&gt; ebox</code></li>
 <li><code>ebox @&gt; ecluster</code></li>
 <li><code>ecluster @&gt; epoint</code> (alias for <code>&amp;&amp;</code>)</li>
 <li><code>ecluster @&gt; ebox</code></li>
 <li><code>ecluster @&gt; ecluster</code></li>
 </ul>
 
-<p>The commutator of <code>@&gt;</code> ("contains") is <code>&lt;@</code> ("is contained in"), i.e. <code>a @&gt; b</code>
-is the same as <code>b &lt;@ a</code>.</p>
+<p>The commutator of <code>@&gt;</code> ("contains") is <code>&lt;@</code> ("is contained in"), i.e.
+"<code>a @&gt; b</code>" is the same as "<code>b &lt;@ a</code>".</p>
+
+<p>Whether the perimeter of an object is taken into account is undefined and may
+differ between the left and the right hand side of the operator. The current
+implementation returns true only if an object is contained completely within
+the other object, not touching its perimeter, paths, outlines, or any singular
+points.</p>
 
 <h4>Distance operator <code>&lt;-&gt;</code></h4>
 
@@ -342,7 +349,7 @@ if the objects are overlapping). Currently implemented for:</p>
 <li><code>ecluster &lt;-&gt; ecluster</code></li>
 </ul>
 
-<p>The <code>&lt;-&gt;</code> operator is commutative, i.e. <code>a &lt;-&gt; b</code> is the same as <code>b &lt;-&gt; a</code>.
+<p>The <code>&lt;-&gt;</code> operator is commutative, i.e. "<code>a &lt;-&gt; b</code>" is the same as "<code>b &lt;-&gt; a</code>".
 Each commutation is supported as well.</p>
 
 <p>For short distances, the result is very accurate (i.e. respects the dimensions

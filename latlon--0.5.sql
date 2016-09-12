@@ -1134,6 +1134,32 @@ CREATE OPERATOR <@ (
   join = areajoinsel
 );
 
+CREATE FUNCTION ebox_contains_castwrap(ebox, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster @> $2::ecluster';
+
+CREATE OPERATOR @> (
+  leftarg = ebox,
+  rightarg = ebox,
+  procedure = ebox_contains_castwrap,
+  commutator = <@,
+  restrict = areasel,
+  join = areajoinsel
+);
+
+CREATE FUNCTION ebox_contains_swapped_castwrap(ebox, ebox)
+  RETURNS boolean
+  LANGUAGE sql IMMUTABLE AS 'SELECT $2::ecluster @> $1::ecluster';
+
+CREATE OPERATOR <@ (
+  leftarg = ebox,
+  rightarg = ebox,
+  procedure = ebox_contains_swapped_castwrap,
+  commutator = @>,
+  restrict = areasel,
+  join = areajoinsel
+);
+
 CREATE FUNCTION ebox_ecluster_contains_castwrap(ebox, ecluster)
   RETURNS boolean
   LANGUAGE sql IMMUTABLE AS 'SELECT $1::ecluster @> $2';

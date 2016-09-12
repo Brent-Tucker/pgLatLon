@@ -1,4 +1,4 @@
-pgLatLon v0.4 documentation
+pgLatLon v0.5 documentation
 ===========================
 
 pgLatLon is a spatial database extension for the PostgreSQL object-relational
@@ -39,8 +39,8 @@ Then simply type:
 It is also possible to compile and install the extension without GNU Make as
 follows:
 
-    cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0003.so latlon-v0003.c
-    cp latlon-v0003.so `pg_config --pkglibdir`
+    cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0005.so latlon-v0005.c
+    cp latlon-v0005.so `pg_config --pkglibdir`
     cp latlon.control `pg_config --sharedir`/extension/
     cp latlon--*.sql `pg_config --sharedir`/extension/
 
@@ -274,8 +274,8 @@ implemented for:
 * `ecircle && ecluster`
 * `ecluster && ecluster`
 
-The `&&` operator is commutative, i.e. `a && b` is the same as `b && a`. Each
-commutation is supported as well.
+The `&&` operator is commutative, i.e. "`a && b`" is the same as "`b && a`".
+Each commutation is supported as well.
 
 #### Lossy overlap operator `&&+`
 
@@ -289,7 +289,7 @@ currently implemented for:
 * `ecircle &&+ ecluster`
 * `ecluster &&+ ecluster`
 
-The `&&+` operator is commutative, i.e. `a &&+ b` is the same as `b &&+ a`.
+The `&&+` operator is commutative, i.e. "`a &&+ b`" is the same as "`b &&+ a`".
 Each commutation is supported as well.
 
 Where two data types support both the `&&` and the `&&+` operator, the `&&+`
@@ -301,13 +301,20 @@ Tests if the object right of the operator is contained in the object left of
 the operator. Currently implemented for:
 
 * `ebox @> epoint` (alias for `&&`)
+* `ebox @> ebox`
 * `ebox @> ecluster`
 * `ecluster @> epoint` (alias for `&&`)
 * `ecluster @> ebox`
 * `ecluster @> ecluster`
 
-The commutator of `@>` ("contains") is `<@` ("is contained in"), i.e. `a @> b`
-is the same as `b <@ a`.
+The commutator of `@>` ("contains") is `<@` ("is contained in"), i.e.
+"`a @> b`" is the same as "`b <@ a`".
+
+Whether the perimeter of an object is taken into account is undefined and may
+differ between the left and the right hand side of the operator. The current
+implementation returns true only if an object is contained completely within
+the other object, not touching its perimeter, paths, outlines, or any singular
+points.
 
 #### Distance operator `<->`
 
@@ -325,7 +332,7 @@ if the objects are overlapping). Currently implemented for:
 * `ecircle <-> ecluster`
 * `ecluster <-> ecluster`
 
-The `<->` operator is commutative, i.e. `a <-> b` is the same as `b <-> a`.
+The `<->` operator is commutative, i.e. "`a <-> b`" is the same as "`b <-> a`".
 Each commutation is supported as well.
 
 For short distances, the result is very accurate (i.e. respects the dimensions
