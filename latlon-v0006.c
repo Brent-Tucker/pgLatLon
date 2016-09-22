@@ -802,6 +802,7 @@ static bool pgl_clusters_overlap(
 
 /* calculate (approximate) distance between point and cluster */
 static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster) {
+  double comp;           /* square of compression of meridians */
   int i, j, k;  /* i: entry, j: point in entry, k: next point in entry */
   int entrytype;         /* type of entry */
   int npoints;           /* number of points in entry */
@@ -819,6 +820,10 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
   double min_dist = INFINITY;   /* minimum distance */
   /* distance is zero if point is contained in cluster */
   if (pgl_point_in_cluster(point, cluster, false)) return 0;
+  /* calculate (approximate) square compression of meridians */
+  /* TODO: use more exact formula based on WGS-84 */
+  comp = cos((lat0 / 180.0) * M_PI);
+  comp *= comp;
   /* iterate over all entries */
   for (i=0; i<cluster->nentries; i++) {
     /* get properties of entry */
@@ -887,8 +892,8 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
       if (lat1 == lat2 && lon1 == lon2) continue;
       /* otherwise test if point can be projected onto edge of polygon */
       s = (
-        ((lat0-lat1) * (lat2-lat1) + (lon0-lon1) * (lon2-lon1)) /
-        ((lat2-lat1) * (lat2-lat1) + (lon2-lon1) * (lon2-lon1))
+        ((lat0-lat1) * (lat2-lat1) + comp * (lon0-lon1) * (lon2-lon1)) /
+        ((lat2-lat1) * (lat2-lat1) + comp * (lon2-lon1) * (lon2-lon1))
       );
       /* go to next vertex and edge if point cannot be projected */
       if (!(s > 0 && s < 1)) continue;
