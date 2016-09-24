@@ -820,10 +820,15 @@ static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster)
   double min_dist = INFINITY;   /* minimum distance */
   /* distance is zero if point is contained in cluster */
   if (pgl_point_in_cluster(point, cluster, false)) return 0;
-  /* calculate (approximate) square compression of meridians */
-  /* TODO: use more exact formula based on WGS-84 */
+  /* calculate approximate square compression of meridians */
   comp = cos((lat0 / 180.0) * M_PI);
   comp *= comp;
+  /* calculate exact square compression of meridians */
+  comp *= (
+    (1.0 - PGL_EPS2 * (1.0-comp)) *
+    (1.0 - PGL_EPS2 * (1.0-comp)) /
+    (PGL_SUBEPS2 * PGL_SUBEPS2)
+  );
   /* iterate over all entries */
   for (i=0; i<cluster->nentries; i++) {
     /* get properties of entry */
