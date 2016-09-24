@@ -5,12 +5,12 @@ pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
 for the WGS-84 spheroid.
 
-While many other spatial databases still use imprecise bounding boxes for many
-operations, pgLatLon aims to support more precise geographic calculations for
-all implemented operators. Efficient indexing of geographic objects is provided
-using space-filling fractal curves. Optimizations on bit level (including
-logarithmic compression) allow for a highly memory-efficient non-overlapping
-index suitable for huge datasets.
+While many other spatial databases still use imprecise bounding boxes for
+many operations, pgLatLon aims to support more precise calculations for all
+implemented geographic operators. Efficient indexing of geographic objects
+is provided using space-filling fractal curves. Optimizations on bit level
+(including logarithmic compression) allow for a highly memory-efficient
+non-overlapping index suitable for huge datasets.
 
 pgLatLon is a lightweight solution as it only depends on PostgreSQL itself (and
 a C compiler for building).
