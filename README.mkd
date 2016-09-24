@@ -99,7 +99,7 @@ pgLatLon provides four geographic types: `epoint`, `ebox`, `ecircle`, and
 
 #### `epoint`
 
-A point on the earth spheroid (WGS-84).
+A point on the Earth spheroid (WGS-84).
 
 The text input format is `'[N|S]<float> [E|W]<float>'`, where each float is in
 degrees. Note the required white space between the latitude and longitude
@@ -124,13 +124,13 @@ still stored in the datum, and if a point is on the prime meridian or the
 prime meridian, this is done by storing a floating point value of -0 for
 0 degrees west and a value of +0 for 0 degrees east. In case of the
 180th meridian, this is done by storing -180 or +180 respectively. The equality
-operator, however, returns true when the same points on earth are described,
+operator, however, returns true when the same points on Earth are described,
 i.e. the longitude is ignored for the poles, and 180 degrees west is considered
 to be equal to 180 degrees east.
 
 #### `ebox`
 
-An area on earth demarcated by a southern and northern latitude, and a western
+An area on Earth demarcated by a southern and northern latitude, and a western
 and eastern longitude (all given in WGS-84).
 
 The text input format is
@@ -337,7 +337,7 @@ Each commutation is supported as well.
 
 For short distances, the result is very accurate (i.e. respects the dimensions
 of the WGS-84 spheroid). For longer distances in the order of magnitude of
-earth's radius or greater, the value is only approximate (but the error is
+Earth's radius or greater, the value is only approximate (but the error is
 still less than 0.2% as long as no polygons with very long edges are involved).
 
 The functions `distance(epoint, epoint)` and `distance(ecluster, epoint)` can
