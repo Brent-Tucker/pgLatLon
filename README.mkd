@@ -1,4 +1,4 @@
-pgLatLon v0.6 documentation
+pgLatLon v0.7 documentation
 ===========================
 
 pgLatLon is a spatial database extension for the PostgreSQL object-relational
@@ -39,8 +39,8 @@ Then simply type:
 It is also possible to compile and install the extension without GNU Make as
 follows:
 
-    cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0006.so latlon-v0006.c
-    cp latlon-v0006.so `pg_config --pkglibdir`
+    cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0007.so latlon-v0007.c
+    cp latlon-v0007.so `pg_config --pkglibdir`
     cp latlon.control `pg_config --sharedir`/extension/
     cp latlon--*.sql `pg_config --sharedir`/extension/
 
