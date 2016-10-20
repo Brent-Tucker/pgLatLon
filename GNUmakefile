@@ -1,5 +1,5 @@
 EXTENSION = latlon
-DATA = latlon--0.6--0.7.sql latlon--0.7.sql
+DATA = latlon--0.6--0.7.sql latlon--0.7.sql latlon--0.7--0.8.sql latlon--0.8.sql
 MODULES = latlon-v0007
 
 PG_CONFIG = pg_config
