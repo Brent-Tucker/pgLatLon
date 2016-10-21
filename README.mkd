@@ -1,4 +1,4 @@
-pgLatLon v0.7 documentation
+pgLatLon v0.8 documentation
 ===========================
 
 pgLatLon is a spatial database extension for the PostgreSQL object-relational
