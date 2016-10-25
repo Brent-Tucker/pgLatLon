@@ -1,5 +1,5 @@
-<html><head><title>pgLatLon v0.8 documentation</title></head><body>
-<h1>pgLatLon v0.8 documentation</h1>
+<html><head><title>pgLatLon v0.9 documentation</title></head><body>
+<h1>pgLatLon v0.9 documentation</h1>
 
 <p>pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
@@ -40,8 +40,8 @@ GPLv2/v3.</p>
 <p>It is also possible to compile and install the extension without GNU Make as
 follows:</p>
 
-<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0007.so latlon-v0007.c
-cp latlon-v0007.so `pg_config --pkglibdir`
+<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0008.so latlon-v0008.c
+cp latlon-v0008.so `pg_config --pkglibdir`
 cp latlon.control `pg_config --sharedir`/extension/
 cp latlon--*.sql `pg_config --sharedir`/extension/
 </code></pre>
@@ -485,6 +485,40 @@ See "1. Types", subsection <code>ebox</code> for details.</p>
 <h4><code>epoint_lonlat(</code>longitude <code>float8,</code> latitude <code>float8)</code></h4>
 
 <p>Same as <code>epoint(float8, float8)</code> but with arguments reversed.</p>
+
+<h4><code>fair_distance(ecluster, epoint,</code> samples <code>int4 = 10000)</code></h4>
+
+<p>When working with user-generated content, users may be tempted to create
+intentionally oversized objects in order to optimize search results in an
+unfair manner. The <code>fair_distance</code> function aims to handle this by returning an
+adjusted distance (i.e. distance increased by a penalty) if a geographic object
+(the <code>ecluster</code>) consists of more than one point.</p>
+
+<p>The first argument to this function is an <code>ecluster</code>, the second argument is a
+search point (<code>epoint</code>), and the third argument is an interger related to the
+precision (higher precision will require more computation time).</p>
+
+<p>The penalty by which the returned distance is increased fulfills (at least) the
+following properties:</p>
+
+<ul>
+<li>For search points far away from the <code>ecluster</code> (i.e. distance approaching
+infinity), the penalty approaches zero (i.e. <code>fair_distance</code> behaves the same
+as <code>distance</code>).</li>
+<li>If the <code>ecluster</code> consists of a set of points, the penalty for a search point
+close to one of that points (closer than half of the minimum distance between
+each pair of points in the <code>ecluster</code>) is chosen in such a way that the
+adjusted distance is equal to the distance from the search point to the
+closest point in the <code>ecluster</code> multiplied by the square root of the count of
+points in the <code>ecluster</code>.</li>
+</ul>
+
+<p>The function interally uses a Monte Carlo simulation to compute the result. The
+third parameter (which defaults to 10000) can be used to adjust the number of
+samples taken. It is ensured that the penalty is always positive, i.e. results
+returned by the <code>fair_distance</code> function are always equal to or greater than
+the results returned by the <code>distance</code> function regardless of stochastic
+effects.</p>
 
 <h4><code>GeoJSON_to_epoint(jsonb, text)</code></h4>
 
