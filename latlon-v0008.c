@@ -982,9 +982,9 @@ static double pgl_estimate_point_box_distance(pgl_point *point, pgl_box *box) {
 }
 
 
-/*-------------------------------*
- *  Monte Carlo based functions  *
- *-------------------------------*/
+/*------------------------------------------------------------*
+ *  Functions using numerical integration (Monte Carlo like)  *
+ *------------------------------------------------------------*/
 
 /* half of (spherical) earth's surface area */
 #define PGL_HALF_SURFACE (PGL_RADIUS * PGL_DIAMETER * M_PI)
@@ -1041,7 +1041,7 @@ static double pgl_sample_points(
   return PGL_HALF_SURFACE * double_share;
 }
 
-/* calculate covered area using Monte Carlo method */
+/* calculate covered area using Monte Carlo like method */
 /* TODO: inefficient, should be replaced by different method */
 static double pgl_monte_carlo_area(pgl_cluster *cluster, int samples) {
   pgl_point *points;

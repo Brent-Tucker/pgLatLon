@@ -513,12 +513,12 @@ closest point in the <code>ecluster</code> multiplied by the square root of the 
 points in the <code>ecluster</code>.</li>
 </ul>
 
-<p>The function interally uses a Monte Carlo simulation to compute the result. The
-third parameter (which defaults to 10000) can be used to adjust the number of
-samples taken. It is ensured that the penalty is always positive, i.e. results
-returned by the <code>fair_distance</code> function are always equal to or greater than
-the results returned by the <code>distance</code> function regardless of stochastic
-effects.</p>
+<p>The function interally uses numerical integration (Monte Carlo like) to compute
+the result. The third parameter (which defaults to 10000) can be used to adjust
+the number of samples taken. It is ensured that the penalty is always positive,
+i.e. results returned by the <code>fair_distance</code> function are always equal to or
+greater than the results returned by the <code>distance</code> function regardless of
+stochastic effects.</p>
 
 <h4><code>GeoJSON_to_epoint(jsonb, text)</code></h4>
 
