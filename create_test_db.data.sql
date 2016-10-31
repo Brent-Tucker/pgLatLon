@@ -14,11 +14,13 @@ CREATE OR REPLACE FUNCTION tmp_three_points()
     END;
   $$;
 
-INSERT INTO "test" ("location", "surrounding", "multipoint", "triangle") SELECT
+INSERT INTO "test" ("location", "surrounding", "multipoint", "triangle", "votes") SELECT
   epoint((asin(2*random()-1) / pi()) * 180, (2*random()-1) * 180),
   ecircle((asin(2*random()-1) / pi()) * 180, (2*random()-1) * 180, -ln(1-random()) * 1000),
   ecluster_create_multipoint(tmp_three_points()),
-  ecluster_create_polygon(tmp_three_points())
+  ecluster_create_polygon(tmp_three_points()),
+  floor(random()*101)
   FROM generate_series(1, 10000);
 
 DROP FUNCTION tmp_three_points();
+

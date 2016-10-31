@@ -1,5 +1,5 @@
-<html><head><title>pgLatLon v0.9 documentation</title></head><body>
-<h1>pgLatLon v0.9 documentation</h1>
+<html><head><title>pgLatLon v0.10 documentation</title></head><body>
+<h1>pgLatLon v0.10 documentation</h1>
 
 <p>pgLatLon is a spatial database extension for the PostgreSQL object-relational
 database management system providing geographic data types and spatial indexing
@@ -40,8 +40,8 @@ GPLv2/v3.</p>
 <p>It is also possible to compile and install the extension without GNU Make as
 follows:</p>
 
-<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0008.so latlon-v0008.c
-cp latlon-v0008.so `pg_config --pkglibdir`
+<pre><code>cc -Wall -O2 -fPIC -shared -I `pg_config --includedir-server` -o latlon-v0009.so latlon-v0009.c
+cp latlon-v0009.so `pg_config --pkglibdir`
 cp latlon.control `pg_config --sharedir`/extension/
 cp latlon--*.sql `pg_config --sharedir`/extension/
 </code></pre>
@@ -502,23 +502,41 @@ precision (higher precision will require more computation time).</p>
 following properties:</p>
 
 <ul>
-<li>For search points far away from the <code>ecluster</code> (i.e. distance approaching
-infinity), the penalty approaches zero (i.e. <code>fair_distance</code> behaves the same
-as <code>distance</code>).</li>
+<li>The penalty function is continuous (except noise created by numerical
+integration, see paragraph after this list) as long as no objects are added
+to or removed from the <code>ecluster</code>. That particularly means: small changes in
+the search point (second argument) cause only small changes in the result.</li>
+<li>For search points far away from the <code>ecluster</code> (i.e. large distances compared
+to the dimensions of the <code>ecluster</code>), the penalty approaches zero, i.e. the
+behavior of the <code>fair_distance</code> function approaches the behavior of the
+<code>distance</code> function.</li>
 <li>If the <code>ecluster</code> consists of a set of points, the penalty for a search point
-close to one of that points (closer than half of the minimum distance between
-each pair of points in the <code>ecluster</code>) is chosen in such a way that the
-adjusted distance is equal to the distance from the search point to the
+close to one of those points (closer than half of the minimum distance
+between each pair of points in the <code>ecluster</code>) is chosen in such a way that
+the adjusted distance is equal to the distance from the search point to the
 closest point in the <code>ecluster</code> multiplied by the square root of the count of
 points in the <code>ecluster</code>.</li>
+<li>If the <code>ecluster</code> does not cover any area (i.e. only consists of points,
+paths, and/or outlines), and if the search point (second argument) overlaps
+with the <code>ecluster</code>, then the penalty (and thus the result) is zero.</li>
+<li>The integral (or average) of the square of the fair distance value (result of
+this function) over all possible search points is independent of the
+<code>ecluster</code> as long as the <code>ecluster</code> does not cover more than a half of
+earth's surface.</li>
 </ul>
 
-<p>The function interally uses numerical integration (Monte Carlo like) to compute
-the result. The third parameter (which defaults to 10000) can be used to adjust
-the number of samples taken. It is ensured that the penalty is always positive,
-i.e. results returned by the <code>fair_distance</code> function are always equal to or
-greater than the results returned by the <code>distance</code> function regardless of
-stochastic effects.</p>
+<p>The function uses numerical integration to compute the result. The third
+parameter (which defaults to 10000) can be used to adjust the number of samples
+taken. A higher sample count increases precision as well as execution time of
+the function. Because this function internally uses a spherical model of earth
+for certain steps of the calculation, the precision cannot be increased
+unboundedly.</p>
+
+<p>Despite the limitations explained above, it is ensured that the penalty is
+always positive, i.e. results returned by the <code>fair_distance</code> function are
+always equal to or greater than the results returned by the <code>distance</code>
+function regardless of stochastic effects.  Furthermore, all results are
+deterministic and reproducible with the same version of pgLatLon.</p>
 
 <h4><code>GeoJSON_to_epoint(jsonb, text)</code></h4>
 
