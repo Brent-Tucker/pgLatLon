@@ -218,7 +218,7 @@ operator (`<->`) in the ORDER BY clause.
 
 Note that further types can be indexed by using an index on an expression with
 a conversion function. One conversion function provided by pgLatLon is the
-`GeoJSON_to_ecluster(float8, float8, text)` function:
+`GeoJSON_to_ecluster(jsonb, text)` function:
 
     CREATE TABLE tbl (
             id              serial4         PRIMARY KEY,

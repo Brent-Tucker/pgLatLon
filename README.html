@@ -223,7 +223,7 @@ operator (<code>&lt;-&gt;</code>) in the ORDER BY clause.</p>
 
 <p>Note that further types can be indexed by using an index on an expression with
 a conversion function. One conversion function provided by pgLatLon is the
-<code>GeoJSON_to_ecluster(float8, float8, text)</code> function:</p>
+<code>GeoJSON_to_ecluster(jsonb, text)</code> function:</p>
 
 <pre><code>CREATE TABLE tbl (
         id              serial4         PRIMARY KEY,
