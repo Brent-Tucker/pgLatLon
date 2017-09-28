@@ -812,7 +812,6 @@ static bool pgl_clusters_overlap(
   return false;
 }
 
-
 /* calculate (approximate) distance between point and cluster */
 static double pgl_point_cluster_distance(pgl_point *point, pgl_cluster *cluster) {
   double comp;           /* square of compression of meridians */
