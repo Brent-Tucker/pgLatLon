@@ -9,6 +9,7 @@
 #include "access/gist.h"
 #include "access/stratnum.h"
 #include "utils/array.h"
+#include <limits.h>
 #include <math.h>
 
 #ifdef PG_MODULE_MAGIC

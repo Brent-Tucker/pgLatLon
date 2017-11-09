@@ -1,3 +1,3 @@
 comment = 'Geographic data types and spatial indexing for the WGS-84 spheroid'
-default_version = '0.10'
+default_version = '0.11'
 relocatable = true
