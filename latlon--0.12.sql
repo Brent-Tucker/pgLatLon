@@ -261,7 +261,7 @@ CREATE OPERATOR = (
 CREATE OPERATOR <> (
   leftarg = epoint,
   rightarg = epoint,
-  procedure = epoint_btree_eq,
+  procedure = epoint_btree_ne,
   commutator = <>,
   negator = =,
   restrict = neqsel,
@@ -370,7 +370,7 @@ CREATE OPERATOR = (
 CREATE OPERATOR <> (
   leftarg = ebox,
   rightarg = ebox,
-  procedure = ebox_btree_eq,
+  procedure = ebox_btree_ne,
   commutator = <>,
   negator = =,
   restrict = neqsel,
@@ -479,7 +479,7 @@ CREATE OPERATOR = (
 CREATE OPERATOR <> (
   leftarg = ecircle,
   rightarg = ecircle,
-  procedure = ecircle_btree_eq,
+  procedure = ecircle_btree_ne,
   commutator = <>,
   negator = =,
   restrict = neqsel,
