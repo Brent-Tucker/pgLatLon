@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="GPS Visualizer Sandbox https://www.gpsvisualizer.com/draw/" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<trk>
+		<name>river</name>
+		<desc>Length: 16.18 km (10.05 mi)</desc>
+		<trkseg>
+			<trkpt lat="-19.3007748" lon="33.371315"></trkpt>
+			<trkpt lat="-19.3228072" lon="33.3634186"></trkpt>
+			<trkpt lat="-19.3403013" lon="33.360672"></trkpt>
+			<trkpt lat="-19.3633" lon="33.351059"></trkpt>
+			<trkpt lat="-19.3701019" lon="33.3503723"></trkpt>
+			<trkpt lat="-19.3749601" lon="33.3476257"></trkpt>
+			<trkpt lat="-19.3788466" lon="33.3452225"></trkpt>
+			<trkpt lat="-19.3817614" lon="33.3465958"></trkpt>
+			<trkpt lat="-19.3817614" lon="33.3524323"></trkpt>
+			<trkpt lat="-19.3846762" lon="33.3599854"></trkpt>
+			<trkpt lat="-19.3911533" lon="33.3620453"></trkpt>
+			<trkpt lat="-19.407021" lon="33.3706284"></trkpt>
+			<trkpt lat="-19.4206207" lon="33.3833313"></trkpt>
+			<trkpt lat="-19.4235348" lon="33.3860779"></trkpt>
+		</trkseg>
+	</trk>
+	<trk>
+		<name>river</name>
+		<desc>Length: 6.099 km (3.79 mi)</desc>
+		<trkseg>
+			<trkpt lat="-19.4517015" lon="33.4677887"></trkpt>
+			<trkpt lat="-19.4538057" lon="33.4677029"></trkpt>
+			<trkpt lat="-19.4552624" lon="33.4677029"></trkpt>
+			<trkpt lat="-19.4566382" lon="33.4693336"></trkpt>
+			<trkpt lat="-19.4584187" lon="33.4699345"></trkpt>
+			<trkpt lat="-19.4599563" lon="33.4699345"></trkpt>
+			<trkpt lat="-19.4612511" lon="33.4695053"></trkpt>
+			<trkpt lat="-19.4650547" lon="33.4694195"></trkpt>
+			<trkpt lat="-19.4701529" lon="33.4725952"></trkpt>
+			<trkpt lat="-19.4737943" lon="33.4727669"></trkpt>
+			<trkpt lat="-19.4764647" lon="33.4745693"></trkpt>
+			<trkpt lat="-19.4780831" lon="33.4760284"></trkpt>
+			<trkpt lat="-19.4767884" lon="33.4828091"></trkpt>
+			<trkpt lat="-19.4777594" lon="33.4859848"></trkpt>
+			<trkpt lat="-19.4809961" lon="33.4907055"></trkpt>
+			<trkpt lat="-19.4823717" lon="33.4923363"></trkpt>
+			<trkpt lat="-19.4848801" lon="33.4937096"></trkpt>
+			<trkpt lat="-19.4888449" lon="33.4936237"></trkpt>
+			<trkpt lat="-19.490625" lon="33.4935379"></trkpt>
+		</trkseg>
+	</trk>
+</gpx>
